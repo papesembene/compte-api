@@ -21,7 +21,7 @@ return [
                 'use_absolute_path' => true,
 
                 // Swagger UI assets
-                'swagger_ui_assets_path' => 'vendor/swagger-api/swagger-ui/dist/',
+                'swagger_ui_assets_path' => 'vendor/swagger-ui/dist/',
 
                 // Nom du fichier JSON généré (on ne l'utilise pas ici)
                 'docs_json' => 'api-docs.json',
@@ -61,7 +61,7 @@ return [
 
         'paths' => [
             'use_absolute_path' => true,
-            'swagger_ui_assets_path' => 'vendor/swagger-api/swagger-ui/dist/',
+            'swagger_ui_assets_path' => 'vendor/swagger-ui/dist/',
             'docs_json' => 'api-docs.json',     
             'docs_yaml' => 'api-docs/openapi.yaml',
             'format_to_use_for_docs' => 'yaml',

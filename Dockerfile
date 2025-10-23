@@ -13,7 +13,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 # Copier et installer les dépendances
 WORKDIR /var/www
 COPY composer.json composer.lock ./
-RUN composer install --optimize-autoloader --no-interaction --no-scripts
+RUN composer install --optimize-autoloader --no-interaction
 
 # Copier le code source (sauf .env, car les variables sont dans docker-compose)
 COPY . .
