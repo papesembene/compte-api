@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+// Swagger documentation route
+Route::get('/api/documentation', [L5Swagger\Http\Controllers\SwaggerController::class, 'api']);
+
+// Swagger documentation route
+Route::get('/api/documentation', [L5Swagger\Http\Controllers\SwaggerController::class, 'api']);
