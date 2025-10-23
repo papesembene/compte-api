@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\CompteController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,4 +31,15 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     Route::apiResource('comptes', CompteController::class);
     Route::post('comptes/{compte}/bloquer', [CompteController::class, 'bloquer']);
     Route::post('comptes/{compte}/debloquer', [CompteController::class, 'debloquer']);
+});
+
+// Temporary route for setting up database
+Route::get('/setup-database', function () {
+    try {
+        Artisan::call('migrate');
+        Artisan::call('db:seed');
+        return response()->json(['message' => 'Migrations and seeders executed successfully']);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
 });
