@@ -5,14 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Modèle représentant un client de la banque.
+ * Modèle représentant un compte bancaire.
  *
- * Responsabilité : Gérer les données et relations du client.
+ * Responsabilité : Gérer les données et relations du compte.
  */
-class Client extends Model
+class Compte extends Model
 {
     use HasFactory;
 
@@ -31,20 +30,19 @@ class Client extends Model
      */
     protected $fillable = [
         'id',
-        'titulaire',
-        'nci',
-        'email',
-        'telephone',
-        'adresse',
+        'numero_compte',
+        'solde',
+        'type_compte',
+        'client_id',
     ];
 
     /**
-     * Relation avec les comptes du client.
+     * Relation avec le client propriétaire du compte.
      *
-     * @return HasMany
+     * @return BelongsTo
      */
-    public function comptes(): HasMany
+    public function client(): BelongsTo
     {
-        return $this->hasMany(Compte::class);
+        return $this->belongsTo(Client::class);
     }
 }

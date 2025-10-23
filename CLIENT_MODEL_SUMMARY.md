@@ -62,3 +62,28 @@ Ce fichier récapitule les modifications apportées au modèle Client pour l'app
 - Pour étendre : Ajoutez des méthodes au modèle ou de nouvelles règles si nécessaire.
 
 Ce résumé assure une référence claire pour les futures implémentations ou modifications.
+
+## Modèle Compte Ajouté
+
+### 1. **Modèle Compte** (`app/Models/Compte.php`)
+- **Clé Primaire** : UUID.
+- **Champs** : id, numero_compte, solde, type_compte, client_id, timestamps.
+- **Relation** : belongsTo avec Client.
+- **Commentaires** : En français.
+
+### 2. **Migration** (`database/migrations/2025_10_23_122356_create_comptes_table.php`)
+- Table `comptes` avec UUID, foreign key vers clients, indexes.
+
+### 3. **Règle de Validation** (`app/Rules/NumeroCompteRule.php`)
+- Valide numero_compte comme 10 chiffres commençant par 1-9.
+
+### 4. **Requête** (`app/Http/Requests/StoreCompteRequest.php`)
+- Validation avec messages en français.
+
+### 5. **Factory et Seeder**
+- Factory génère des comptes liés à des clients.
+- Seeder crée 20 comptes.
+
+### 6. **Relations Bidirectionnelles**
+- Client a hasMany Comptes.
+- Compte a belongsTo Client.
