@@ -19,6 +19,9 @@ RUN composer install --optimize-autoloader --no-interaction --no-scripts
 COPY . .
 RUN rm -f .env  # Supprimer .env pour éviter les conflits avec les variables d'environnement
 
+# Publish Swagger assets
+RUN php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider" --tag=l5-swagger-assets
+
 # Exposer le port
 EXPOSE 10000
 
