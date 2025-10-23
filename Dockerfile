@@ -19,8 +19,9 @@ RUN rm -f .env  # Supprimer .env pour éviter les conflits avec les variables d'
 COPY composer.json composer.lock ./
 RUN composer install --optimize-autoloader --no-interaction
 
-# Publish Swagger assets
-RUN php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider" --tag=l5-swagger-assets
+# Publier les actifs Swagger UI
+RUN mkdir -p public/swagger-ui
+RUN cp -r vendor/swagger-api/swagger-ui/dist/* public/swagger-ui/
 
 # Exposer le port
 EXPOSE 10000
