@@ -10,14 +10,14 @@ RUN apk add --no-cache postgresql-dev libzip-dev libpng-dev libjpeg-turbo-dev fr
 # Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Copier et installer les dépendances
+# Copier le code source
 WORKDIR /var/www
-COPY composer.json composer.lock ./
-RUN composer install --optimize-autoloader --no-interaction
-
-# Copier le code source (sauf .env, car les variables sont dans docker-compose)
 COPY . .
 RUN rm -f .env  # Supprimer .env pour éviter les conflits avec les variables d'environnement
+
+# Installer les dépendances
+COPY composer.json composer.lock ./
+RUN composer install --optimize-autoloader --no-interaction
 
 # Publish Swagger assets
 RUN php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider" --tag=l5-swagger-assets
