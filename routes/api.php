@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\V1\ClientController;
+use App\Http\Controllers\Api\V1\CompteController;
+use App\Http\Controllers\Api\V1\TransactionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +19,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+// API v1 Routes
+Route::prefix('v1')->middleware('throttle:api')->group(function () {
+    // Clients
+    Route::apiResource('clients', ClientController::class);
+
+    // Comptes
+    Route::apiResource('comptes', CompteController::class);
+    Route::post('comptes/{compte}/bloquer', [CompteController::class, 'bloquer']);
+    Route::post('comptes/{compte}/debloquer', [CompteController::class, 'debloquer']);
 });

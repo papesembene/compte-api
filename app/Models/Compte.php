@@ -33,6 +33,7 @@ class Compte extends Model
         'numero_compte',
         'solde',
         'type_compte',
+        'statut',
         'client_id',
     ];
 

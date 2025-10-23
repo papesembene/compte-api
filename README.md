@@ -1,66 +1,137 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Compte API - Déploiement Docker
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Ce projet est une API Laravel 10 pour la gestion de clients et comptes bancaires, entièrement containerisée avec Docker pour le développement local et la production. Utilise un Dockerfile optimisé pour un déploiement sécurisé et performant.
 
-## About Laravel
+## Architecture
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Backend**: Laravel 10 avec PHP 8.2, containerisé pour cohérence dev/prod.
+- **Base de données**: PostgreSQL (local via Docker, cloud via Render/Supabase/Neon).
+- **Déploiement**: Docker pour tout (app, DB, pgAdmin), runtime PHP pour production sur Render.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Fichiers Clés
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Dockerfile
+- **Optimisé** : Single-stage build avec PHP 8.2-cli-alpine, extensions PostgreSQL, Composer, optimisations Laravel (config:cache, route:cache).
+- **Sécurité** : Utilisateur non-root, healthcheck, nettoyage des deps.
+- **Performance** : Image légère, CMD artisan serve pour API simple.
+- **Port** : Expose 10000, compatible Render.
 
-## Learning Laravel
+### docker-compose.yml
+- **Services**:
+  - `postgres`: Base de données PostgreSQL 15 avec volume persistant.
+  - `app`: Application Laravel containerisée, monte le code pour dev.
+  - `pgadmin`: Interface web pour gérer la DB (localhost:5050).
+- **Ports**: App sur 10000, PostgreSQL sur 5433, pgAdmin sur 5050.
+- **Healthchecks**: Vérifie la santé de tous les services.
+- **Volumes**: Persistant pour DB, code monté pour dev.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### .dockerignore
+- Exclut .env, logs, vendor, etc., pour build sécurisé et image légère.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### .env.example
+- Configuration pour PostgreSQL (local et cloud).
+- Variables pour DB_HOST (postgres pour local, URL cloud pour production).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Déploiement Local
 
-## Laravel Sponsors
+### Prérequis
+- Docker et Docker Compose installés.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Étapes
+1. **Cloner le repo**:
+   ```bash
+   git clone <repo-url>
+   cd compte-api
+   ```
 
-### Premium Partners
+2. **Copier .env**:
+   ```bash
+   cp .env.example .env
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+3. **Générer APP_KEY**:
+   ```bash
+   php artisan key:generate --show
+   ```
+   Copier la clé dans .env.
 
-## Contributing
+4. **Lancer tous les services**:
+   ```bash
+   docker-compose up -d
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+5. **Migrer la DB**:
+   ```bash
+   docker-compose exec app php artisan migrate
+   docker-compose exec app php artisan db:seed  # Optionnel
+   ```
 
-## Code of Conduct
+6. **Accéder aux outils**:
+   - API: http://localhost:10000
+   - Swagger: http://localhost:10000/api/documentation
+   - pgAdmin: http://localhost:5050 (admin@admin.com / admin)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+7. **Arrêter**:
+   ```bash
+   docker-compose down
+   ```
 
-## Security Vulnerabilities
+## Déploiement sur Render
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Prérequis
+- Compte Render avec service PostgreSQL (ou Supabase/Neon).
+- Repo Git connecté à Render.
 
-## License
+### Étapes
+1. **Créer une DB PostgreSQL sur Render**:
+   - Aller à https://render.com, créer un service PostgreSQL.
+   - Noter l'URL externe (ex: postgresql://user:pass@host:5432/db).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+2. **Connecter le repo**:
+   - Dans Render Dashboard, créer un Web Service.
+   - Connecter le repo Git.
+
+3. **Configuration Render**:
+   - **Runtime**: Docker
+   - **Dockerfile Path**: Dockerfile
+   - **Build Command**: (laisser vide, utilise Dockerfile)
+   - **Start Command**: (laisser vide, utilise CMD du Dockerfile)
+   - **Port**: 10000
+
+4. **Variables d'environnement** (dans Render Dashboard):
+   ```
+   APP_NAME=Compte API
+   APP_ENV=production
+   APP_KEY=<générer avec php artisan key:generate --show>
+   APP_DEBUG=false
+   APP_URL=https://your-render-app.onrender.com
+
+   DB_CONNECTION=pgsql
+   DB_HOST=<DB_HOST de Render PostgreSQL>
+   DB_PORT=5432
+   DB_DATABASE=<DB_NAME>
+   DB_USERNAME=<DB_USER>
+   DB_PASSWORD=<DB_PASS>
+
+   LOG_CHANNEL=stack
+   LOG_LEVEL=error
+   ```
+
+5. **Déployer**:
+   - Render build l'image Docker et déploie.
+   - Accéder à https://your-render-app.onrender.com/api/documentation
+
+### Bonnes Pratiques
+- **Sécurité**: .env exclu via .dockerignore, variables d'environnement Render.
+- **Optimisation**: Dockerfile optimisé, image légère, cache Laravel.
+- **Cache**: Utiliser config:cache, route:cache pour la production.
+- **DB**: Utiliser une DB cloud pour persistance.
+
+## Explications Supplémentaires
+
+- **Containerisation complète**: Docker pour app, DB et pgAdmin assure la parité dev/prod, reproductibilité et sécurité.
+- **Optimisations DevOps**: Dockerfile léger, non-root, cache Laravel, healthchecks pour monitoring.
+- **PostgreSQL Cloud**: Facile à intégrer avec Render PostgreSQL, Supabase ou Neon.
+- **Production**: Image Docker optimisée pour Render, déploiement scalable et sécurisé.
+
+Pour plus d'infos, voir la doc Laravel et Render.

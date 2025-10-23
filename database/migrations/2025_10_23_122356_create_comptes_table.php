@@ -16,6 +16,7 @@ return new class extends Migration
              $table->string('numero_compte')->unique();
              $table->decimal('solde', 15, 2)->default(0);
              $table->string('type_compte'); // e.g., 'courant', 'epargne'
+             $table->string('statut')->default('debloque'); // 'bloque' or 'debloque'
              $table->uuid('client_id');
              $table->timestamps();
 

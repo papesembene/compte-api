@@ -1,0 +1,52 @@
+# Fichiers d'environnement (sécurité critique)
+.env
+.env.local
+.env.production
+.env.example
+
+# Fichiers Git
+.git
+.gitignore
+.gitattributes
+
+# Fichiers Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Fichiers de logs et cache (ne pas inclure dans l'image)
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/testing/*
+
+# Fichiers de test et développement
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Fichiers IDE et éditeur
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Fichiers système et temporaires
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Vendor (installé via Composer dans l'image)
+vendor/
+
+# Node modules (si applicable)
+node_modules/
+
+# Fichiers de documentation (optionnel, mais pour image plus légère)
+README.md
+*.md
+
+# Fichiers de configuration locale
+config/local/

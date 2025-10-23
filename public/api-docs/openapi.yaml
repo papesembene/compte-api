@@ -1,0 +1,617 @@
+openapi: 3.0.0
+info:
+  title: Banque API
+  version: v1.0.0
+  description: API pour gérer les clients et comptes de la banque
+
+servers:
+  - url: http://127.0.0.1:8000/api/v1
+    description: Serveur local de développement
+
+tags:
+  - name: Clients
+    description: Opérations sur les clients
+  - name: Comptes
+    description: Opérations sur les comptes
+
+security:
+  - bearerAuth: []
+
+paths:
+  /clients:
+    get:
+      summary: Lister tous les clients
+      description: Récupère une liste paginée de clients avec options de recherche et tri.
+      tags:
+        - Clients
+      parameters:
+        - name: page
+          in: query
+          description: Numéro de page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Nombre d'éléments par page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sort
+          in: query
+          description: Champ de tri
+          schema:
+            type: string
+            enum: [id, titulaire, email, created_at]
+            default: created_at
+        - name: order
+          in: query
+          description: Ordre de tri
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: search
+          in: query
+          description: Rechercher par nom ou email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des clients
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Client'
+                  currentPage:
+                    type: integer
+                    example: 1
+                  totalPages:
+                    type: integer
+                    example: 5
+                  totalItems:
+                    type: integer
+                    example: 50
+                  message:
+                    type: string
+                    example: Clients récupérés avec succès.
+        '400':
+          description: Paramètres invalides
+        '401':
+          description: Non autorisé
+    post:
+      summary: Créer un nouveau client
+      description: Crée un nouveau client avec validation des données.
+      tags:
+        - Clients
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreClientRequest'
+      responses:
+        '201':
+          description: Client créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Client'
+                  message:
+                    type: string
+                    example: Client créé avec succès.
+        '400':
+          description: Données invalides
+        '401':
+          description: Non autorisé
+        '422':
+          description: Erreurs de validation
+
+  /clients/{id}:
+    get:
+      summary: Récupérer un client spécifique
+      description: Récupère les détails d'un client par son ID.
+      tags:
+        - Clients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du client
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Détails du client
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Client'
+                  message:
+                    type: string
+                    example: Client récupéré avec succès.
+        '404':
+          description: Client non trouvé
+        '401':
+          description: Non autorisé
+    patch:
+      summary: Mettre à jour un client
+      description: Met à jour les informations d'un client.
+      tags:
+        - Clients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du client
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreClientRequest'
+      responses:
+        '200':
+          description: Client mis à jour
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Client'
+                  message:
+                    type: string
+                    example: Client mis à jour avec succès.
+        '404':
+          description: Client non trouvé
+        '401':
+          description: Non autorisé
+        '422':
+          description: Erreurs de validation
+    delete:
+      summary: Supprimer un client (soft delete)
+      description: Effectue une suppression logique du client.
+      tags:
+        - Clients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du client
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Client supprimé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Client supprimé avec succès.
+        '404':
+          description: Client non trouvé
+        '401':
+          description: Non autorisé
+
+  /comptes:
+    get:
+      summary: Lister tous les comptes
+      description: Récupère une liste paginée de comptes avec options de filtre et tri.
+      tags:
+        - Comptes
+      parameters:
+        - name: page
+          in: query
+          description: Numéro de page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Nombre d'éléments par page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: type
+          in: query
+          description: Filtrer par type de compte
+          schema:
+            type: string
+            enum: [courant, epargne]
+        - name: statut
+          in: query
+          description: Filtrer par statut (bloqué/débloqué)
+          schema:
+            type: string
+            enum: [bloque, debloque]
+        - name: sort
+          in: query
+          description: Champ de tri
+          schema:
+            type: string
+            enum: [id, numero_compte, solde, created_at]
+            default: created_at
+        - name: order
+          in: query
+          description: Ordre de tri
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Liste des comptes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Compte'
+                  currentPage:
+                    type: integer
+                    example: 1
+                  totalPages:
+                    type: integer
+                    example: 5
+                  totalItems:
+                    type: integer
+                    example: 50
+                  message:
+                    type: string
+                    example: Comptes récupérés avec succès.
+        '400':
+          description: Paramètres invalides
+        '401':
+          description: Non autorisé
+    post:
+      summary: Créer un nouveau compte
+      description: Crée un nouveau compte pour un client existant.
+      tags:
+        - Comptes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreCompteRequest'
+      responses:
+        '201':
+          description: Compte créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Compte'
+                  message:
+                    type: string
+                    example: Compte créé avec succès.
+        '400':
+          description: Données invalides
+        '401':
+          description: Non autorisé
+        '422':
+          description: Erreurs de validation
+
+  /comptes/{id}:
+    get:
+      summary: Récupérer un compte spécifique
+      description: Récupère les détails d'un compte par son ID.
+      tags:
+        - Comptes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du compte
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Détails du compte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Compte'
+                  message:
+                    type: string
+                    example: Compte récupéré avec succès.
+        '404':
+          description: Compte non trouvé
+        '401':
+          description: Non autorisé
+    patch:
+      summary: Mettre à jour un compte
+      description: Met à jour les informations d'un compte.
+      tags:
+        - Comptes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du compte
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreCompteRequest'
+      responses:
+        '200':
+          description: Compte mis à jour
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Compte'
+                  message:
+                    type: string
+                    example: Compte mis à jour avec succès.
+        '404':
+          description: Compte non trouvé
+        '401':
+          description: Non autorisé
+        '422':
+          description: Erreurs de validation
+    delete:
+      summary: Supprimer un compte (soft delete)
+      description: Effectue une suppression logique du compte.
+      tags:
+        - Comptes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du compte
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Compte supprimé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Compte supprimé avec succès.
+        '404':
+          description: Compte non trouvé
+        '401':
+          description: Non autorisé
+
+  /comptes/{id}/bloquer:
+    post:
+      summary: Bloquer un compte
+      description: Bloque un compte pour empêcher les transactions.
+      tags:
+        - Comptes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du compte
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Compte bloqué
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Compte'
+                  message:
+                    type: string
+                    example: Compte bloqué avec succès.
+        '404':
+          description: Compte non trouvé
+        '401':
+          description: Non autorisé
+
+  /comptes/{id}/debloquer:
+    post:
+      summary: Débloquer un compte
+      description: Débloque un compte pour permettre les transactions.
+      tags:
+        - Comptes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du compte
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Compte débloqué
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Compte'
+                  message:
+                    type: string
+                    example: Compte débloqué avec succès.
+        '404':
+          description: Compte non trouvé
+        '401':
+          description: Non autorisé
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Entrez le token au format (Bearer <token>)
+
+  schemas:
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        titulaire:
+          type: string
+          example: "John Doe"
+        nci:
+          type: string
+          description: Numéro de Carte d'Identité Nationale (13 chiffres)
+          example: "1234567890123"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        telephone:
+          type: string
+          description: Numéro de téléphone sénégalais (+221 7X XXXXXXX)
+          example: "+221701234567"
+        adresse:
+          type: string
+          example: "Dakar, Senegal"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Compte:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        numero_compte:
+          type: string
+          description: Numéro de compte (10 chiffres commençant par 1-9)
+          example: "1234567890"
+        solde:
+          type: number
+          format: float
+          description: Solde calculé du compte
+          example: 1000.50
+        type_compte:
+          type: string
+          enum: [courant, epargne]
+          example: "courant"
+        statut:
+          type: string
+          enum: [bloque, debloque]
+          example: "debloque"
+        client_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        client:
+          $ref: '#/components/schemas/Client'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    StoreClientRequest:
+      type: object
+      required:
+        - titulaire
+        - nci
+        - email
+        - telephone
+        - adresse
+      properties:
+        titulaire:
+          type: string
+          example: "John Doe"
+        nci:
+          type: string
+          description: Numéro de Carte d'Identité Nationale (13 chiffres)
+          example: "1234567890123"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        telephone:
+          type: string
+          description: Numéro de téléphone sénégalais (+221 7X XXXXXXX)
+          example: "+221701234567"
+        adresse:
+          type: string
+          example: "Dakar, Senegal"
+
+    StoreCompteRequest:
+      type: object
+      required:
+        - numero_compte
+        - solde
+        - type_compte
+        - client_id
+      properties:
+        numero_compte:
+          type: string
+          description: Numéro de compte (10 chiffres commençant par 1-9)
+          example: "1234567890"
+        solde:
+          type: number
+          format: float
+          example: 1000.50
+        type_compte:
+          type: string
+          enum: [courant, epargne]
+          example: "courant"
+        client_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
