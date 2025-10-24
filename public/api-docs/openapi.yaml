@@ -5,9 +5,9 @@ info:
   description: API for managing bank clients and accounts
 
 servers:
-  - url: http://localhost:10000
+  - url: http://localhost:10000/api/v1
     description: Local development server
-  - url: https://compte-api.onrender.com/
+  - url: https://compte-api.onrender.com/api/v1
     description: Production server on Render
 
 tags:
@@ -118,7 +118,7 @@ paths:
         '422':
           description: Erreurs de validation
 
-  /clients/{id}:
+  /api/v1/clients/{id}:
     get:
       summary: Récupérer un client spécifique
       description: Récupère les détails d'un client par son ID.
@@ -216,7 +216,7 @@ paths:
         '401':
           description: Non autorisé
 
-  /comptes:
+  /api/v1/comptes:
     get:
       summary: Lister tous les comptes
       description: Récupère une liste paginée de comptes avec options de filtre et tri.
@@ -323,7 +323,7 @@ paths:
         '422':
           description: Erreurs de validation
 
-  /comptes/{id}:
+  /api/v1/comptes/{id}:
     get:
       summary: Récupérer un compte spécifique
       description: Récupère les détails d'un compte par son ID.
@@ -421,7 +421,7 @@ paths:
         '401':
           description: Non autorisé
 
-  /comptes/{id}/bloquer:
+  /api/v1/comptes/{id}/bloquer:
     post:
       summary: Bloquer un compte
       description: Bloque un compte pour empêcher les transactions.
@@ -453,7 +453,7 @@ paths:
         '401':
           description: Non autorisé
 
-  /comptes/{id}/debloquer:
+  /api/v1/comptes/{id}/debloquer:
     post:
       summary: Débloquer un compte
       description: Débloque un compte pour permettre les transactions.
@@ -485,8 +485,8 @@ paths:
         '401':
           description: Non autorisé
 
-
-  schemas:
+components:
+ schemas:
     Client:
       type: object
       properties:

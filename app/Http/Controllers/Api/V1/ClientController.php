@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Services\ClientService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use OpenApi\Attributes as OA;
 
 class ClientController extends Controller
 {

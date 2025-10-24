@@ -22,7 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // API Routes
-Route::middleware('throttle:api')->group(function () {
+Route::middleware('throttle:api')->prefix('v1')->group(function () {
     // Clients
     Route::apiResource('clients', ClientController::class);
 
