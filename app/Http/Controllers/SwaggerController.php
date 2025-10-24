@@ -39,9 +39,6 @@ class SwaggerController extends BaseSwaggerController
 
         config(['app.url' => $scheme . '://' . $host]);
 
-        // Also override the L5-Swagger host constant to ensure HTTPS URLs in the OpenAPI spec
-        config(['l5-swagger.constants.L5_SWAGGER_CONST_HOST' => $scheme . '://' . $host]);
-
         $urlToDocs = $this->generateDocumentationFileURL($documentation, $config);
         $useAbsolutePath = config('l5-swagger.documentations.'.$documentation.'.paths.use_absolute_path', true);
 
