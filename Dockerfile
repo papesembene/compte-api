@@ -77,5 +77,8 @@ USER laravel
 # Exposer le port 8000
 EXPOSE 8000
 
+# Script d'entrée pour les migrations
+ENTRYPOINT ["docker-entrypoint.sh"]
+
 # Commande par défaut
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
