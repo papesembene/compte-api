@@ -103,7 +103,8 @@ return [
         ],
 
         'scanOptions' => [
-            'pattern' => null,
+            'pattern' => 'app/**/*.php',
+            'in' => base_path(),
             'exclude' => [],
         ],
 
