@@ -21,8 +21,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// API v1 Routes
-Route::prefix('v1')->middleware('throttle:api')->group(function () {
+// API Routes
+Route::middleware('throttle:api')->group(function () {
     // Clients
     Route::apiResource('clients', ClientController::class);
 
