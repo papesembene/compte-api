@@ -2,8 +2,18 @@
 
 return [
 
+    /*
+    |--------------------------------------------------------------------------
+    | Documentation par défaut
+    |--------------------------------------------------------------------------
+    */
     'default' => 'v1',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Liste des documentations
+    |--------------------------------------------------------------------------
+    */
     'documentations' => [
 
         'v1' => [
@@ -13,10 +23,12 @@ return [
             ],
 
             'routes' => [
-                // URL pour accéder à la doc Swagger
+                // Routes Swagger
                 'api' => 'api/documentation',
                 'docs' => 'docs',
                 'oauth2_callback' => 'api/oauth2-callback',
+
+                // Aucun middleware par défaut (tu peux en ajouter si besoin)
                 'middleware' => [
                     'api' => [],
                     'asset' => [],
@@ -26,33 +38,42 @@ return [
             ],
 
             'paths' => [
-                'use_absolute_path' => true,
+                /*
+                |--------------------------------------------------------------------------
+                | Chemins relatifs (très important pour Render)
+                |--------------------------------------------------------------------------
+                */
+                'use_absolute_path' => false,
 
-                // Swagger UI assets
-                'swagger_ui_assets_path' => 'public/swagger-ui/',
+                // Dossier contenant les assets de Swagger UI
+                'swagger_ui_assets_path' => '/swagger-ui/',
 
-                // Nom du fichier JSON généré (on ne l'utilise pas ici)
+                // Nom du fichier JSON/YAML généré
                 'docs_json' => 'api-docs.json',
+                'docs_yaml' => 'api-docs/openapi.yaml',
 
-                // Nom du fichier YAML existant
-                'docs_yaml' => 'openapi.yaml',
-
-                // On force Swagger UI à utiliser YAML
+                // Format principal utilisé
                 'format_to_use_for_docs' => 'yaml',
 
-                // PAS de scan PHP, on met null ou vide
+                // Dossier public où Swagger met les fichiers
+                'docs' => base_path('public/api-docs'),
+
+                // On ne scanne pas automatiquement les annotations ici
                 'annotations' => [],
 
-                // Chemin absolu vers le répertoire où les annotations analysées seront stockées
-                'docs' => public_path('api-docs'),
-
-                // Répertoires à exclure du scan
+                // Fichiers/dossiers exclus du scan (facultatif)
                 'excludes' => [],
             ],
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Configuration par défaut (fallback)
+    |--------------------------------------------------------------------------
+    */
     'defaults' => [
+
         'routes' => [
             'docs' => 'docs',
             'oauth2_callback' => 'api/oauth2-callback',
@@ -64,29 +85,41 @@ return [
             ],
         ],
 
-        
-        'proxy' => true,
+        /*
+        |--------------------------------------------------------------------------
+        | Proxy (utile sur Render, car l'app tourne derrière un reverse proxy HTTPS)
+        |--------------------------------------------------------------------------
+        */
+        'proxy' => ['*'],
 
         'paths' => [
-            'use_absolute_path' => true,
-            'swagger_ui_assets_path' => 'public/swagger-ui/',
-            'docs_json' => 'api-docs.json',     
+            'use_absolute_path' => false,
+            'swagger_ui_assets_path' => '/swagger-ui/',
+            'docs_json' => 'api-docs.json',
             'docs_yaml' => 'api-docs/openapi.yaml',
             'format_to_use_for_docs' => 'yaml',
-            'annotations' => [],    
-            'base' => env('L5_SWAGGER_BASE_PATH', null),           
+            'annotations' => [],
+            'base' => env('L5_SWAGGER_BASE_PATH', null),
         ],
 
         'scanOptions' => [
-            // PAS de scan
             'pattern' => null,
             'exclude' => [],
         ],
 
-       
-        'generate_always' => false,
+        /*
+        |--------------------------------------------------------------------------
+        | Génération
+        |--------------------------------------------------------------------------
+        */
+        'generate_always' => true,
         'generate_yaml_copy' => true,
 
+        /*
+        |--------------------------------------------------------------------------
+        | UI Swagger
+        |--------------------------------------------------------------------------
+        */
         'ui' => [
             'display' => [
                 'dark_mode' => false,
@@ -101,23 +134,32 @@ return [
             ],
         ],
 
-     
+        /*
+        |--------------------------------------------------------------------------
+        | Autres paramètres
+        |--------------------------------------------------------------------------
+        */
         'operations_sort' => 'alpha',
         'validator_url' => null,
         'additional_config_url' => null,
 
+        /*
+        |--------------------------------------------------------------------------
+        | Constantes & Sécurité
+        |--------------------------------------------------------------------------
+        */
         'constants' => [
             'L5_SWAGGER_CONST_HOST' => env('APP_URL', 'https://localhost'),
         ],
-        'securityDefinitions' => [
-    'securitySchemes' => [
-        [
-            'type' => 'http',
-            'scheme' => 'bearer',
-            'bearerFormat' => 'JWT',
-        ],
-    ],
-],
 
+        'securityDefinitions' => [
+            'securitySchemes' => [
+                [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                    'bearerFormat' => 'JWT',
+                ],
+            ],
+        ],
     ],
 ];

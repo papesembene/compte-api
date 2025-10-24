@@ -11,49 +11,13 @@ class SwaggerController extends BaseSwaggerController
 {
     public function api(Request $request)
     {
-        $documentation = $request->offsetGet('documentation') ?: config('l5-swagger.default');
-        $config = $request->offsetGet('config') ?: config('l5-swagger.documentations.' . $documentation, []);
-
-        if ($proxy = $config['proxy'] ?? false) {
-            if (! is_array($proxy)) {
-                $proxy = [$proxy];
-            }
-            Request::setTrustedProxies(
-                $proxy,
-                Request::HEADER_X_FORWARDED_FOR |
-                Request::HEADER_X_FORWARDED_HOST |
-                Request::HEADER_X_FORWARDED_PORT |
-                Request::HEADER_X_FORWARDED_PROTO |
-                Request::HEADER_X_FORWARDED_AWS_ELB
-            );
+        // Serve the OpenAPI YAML file
+        $yamlPath = public_path('api-docs/openapi.yaml');
+        if (!file_exists($yamlPath)) {
+            return ResponseFacade::make('OpenAPI file not found', 404);
         }
 
-        // Force the app URL to use the current request's scheme and host to avoid mixed content issues
-        $scheme = $request->getScheme();
-        $host = $request->getHost();
-
-        // Force HTTPS for production domain to avoid mixed content
-        if ($host === 'compte-api.onrender.com') {
-            $scheme = 'https';
-        }
-
-        config(['app.url' => $scheme . '://' . $host]);
-
-        $urlToDocs = $this->generateDocumentationFileURL($documentation, $config);
-        $useAbsolutePath = config('l5-swagger.documentations.'.$documentation.'.paths.use_absolute_path', true);
-
-        // Need the / at the end to avoid CORS errors on Homestead systems.
-        return ResponseFacade::make(
-            view('l5-swagger::index', [
-                'documentation' => $documentation,
-                'secure' => RequestFacade::secure(),
-                'urlToDocs' => $urlToDocs,
-                'operationsSorter' => $config['operations_sort'] ?? null,
-                'configUrl' => $config['additional_config_url'] ?? null,
-                'validatorUrl' => $config['validator_url'] ?? null,
-                'useAbsolutePath' => $useAbsolutePath,
-            ]),
-            200
-        );
+        $content = file_get_contents($yamlPath);
+        return ResponseFacade::make($content, 200, ['Content-Type' => 'application/yaml']);
     }
 }

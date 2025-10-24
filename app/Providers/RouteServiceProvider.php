@@ -29,8 +29,6 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        Route::get('/swagger-ui/{asset}', [SwaggerAssetController::class, 'index']);
-
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')
