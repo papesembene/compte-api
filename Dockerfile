@@ -19,9 +19,10 @@ RUN rm -f .env  # Supprimer .env pour éviter les conflits avec les variables d'
 COPY composer.json composer.lock ./
 RUN composer install --optimize-autoloader --no-interaction
 
-# Publier les actifs Swagger UI
+# Publier les actifs Swagger UI (exclure index.html pour garder le custom)
 RUN mkdir -p public/swagger-ui
 RUN cp -r vendor/swagger-api/swagger-ui/dist/* public/swagger-ui/
+RUN rm -f public/swagger-ui/index.html
 
 # Exposer le port
 EXPOSE 10000

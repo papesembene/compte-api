@@ -24,4 +24,4 @@ Route::get('/api/documentation', [SwaggerController::class, 'api'])->middleware(
 Route::get('/docs', function () {
     return file_get_contents(public_path('swagger-ui/index.html'));
 })->middleware('web');
-Route::get('/docs/asset/{asset}', [SwaggerAssetController::class, 'index'])->where('asset', '.*');
+Route::get('/swagger-ui/{asset}', [SwaggerAssetController::class, 'index'])->where('asset', '.*');
