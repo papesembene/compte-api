@@ -1,72 +1,28 @@
+version: '3.8'
 
 services:
-  # Service PostgreSQL pour la base de données locale
-  postgres:
-    image: postgres:15-alpine
-    container_name: compte-api-postgres
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: compte-api
+      - APP_ENV=production
+      - APP_DEBUG=false
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: laravel
       POSTGRES_USER: laravel
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U laravel -d compte-api"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Service Laravel API Backend
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: compte-api-app
-    ports:
-      - "10000:10000"
-    environment:
-      APP_NAME: "Compte API"
-      APP_ENV: local
-      APP_KEY: base64:F14qXa06yAZ66ISu0cQiqKApvZU+Vdbm7ISXrr2ewyQ=
-      APP_DEBUG: true
-      APP_URL: ${APP_URL:-http://localhost:10000}
-
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: compte-api
-      DB_USERNAME: laravel
-      DB_PASSWORD: secret
-
-      LOG_CHANNEL: stack
-      LOG_DEPRECATIONS_CHANNEL: null
-      LOG_LEVEL: debug
-    volumes:
-      - .:/var/www
-      - /var/www/vendor  # Exclure vendor pour éviter les conflits
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "php artisan --version"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  # Service pgAdmin pour la gestion de la base de données
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: compte-api-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
 
 volumes:
   postgres_data:
-    driver: local
