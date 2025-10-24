@@ -15,6 +15,14 @@ return [
             'routes' => [
                 // URL pour accéder à la doc Swagger
                 'api' => 'api/documentation',
+                'docs' => 'docs',
+                'oauth2_callback' => 'api/oauth2-callback',
+                'middleware' => [
+                    'api' => [],
+                    'asset' => [],
+                    'docs' => [],
+                    'oauth2_callback' => [],
+                ],
             ],
 
             'paths' => [

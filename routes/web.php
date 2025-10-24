@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SwaggerController;
+use App\Http\Controllers\SwaggerAssetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,5 +19,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Swagger documentation route
-Route::get('/api/documentation', [SwaggerController::class, 'api']);
+// Swagger documentation routes
+Route::get('/api/documentation', [SwaggerController::class, 'api'])->middleware('web');
+Route::get('/docs/asset/{asset}', [SwaggerAssetController::class, 'index'])->where('asset', '.*');
