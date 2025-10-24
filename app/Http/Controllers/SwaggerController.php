@@ -29,10 +29,18 @@ class SwaggerController extends BaseSwaggerController
         }
 
         // Force the app URL to use the current request's scheme and host to avoid mixed content issues
-        config(['app.url' => $request->getScheme() . '://' . $request->getHost()]);
+        $scheme = $request->getScheme();
+        $host = $request->getHost();
+
+        // Force HTTPS for production domain to avoid mixed content
+        if ($host === 'compte-api.onrender.com') {
+            $scheme = 'https';
+        }
+
+        config(['app.url' => $scheme . '://' . $host]);
 
         // Also override the L5-Swagger host constant to ensure HTTPS URLs in the OpenAPI spec
-        config(['l5-swagger.constants.L5_SWAGGER_CONST_HOST' => $request->getScheme() . '://' . $request->getHost()]);
+        config(['l5-swagger.constants.L5_SWAGGER_CONST_HOST' => $scheme . '://' . $host]);
 
         $urlToDocs = $this->generateDocumentationFileURL($documentation, $config);
         $useAbsolutePath = config('l5-swagger.documentations.'.$documentation.'.paths.use_absolute_path', true);

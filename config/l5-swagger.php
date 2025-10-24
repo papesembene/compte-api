@@ -65,7 +65,7 @@ return [
         ],
 
         
-        'proxy' => false,
+        'proxy' => true,
 
         'paths' => [
             'use_absolute_path' => true,
@@ -107,7 +107,7 @@ return [
         'additional_config_url' => null,
 
         'constants' => [
-            'L5_SWAGGER_CONST_HOST' => env('APP_URL', 'http://localhost:10000'),
+            'L5_SWAGGER_CONST_HOST' => env('APP_URL', 'https://localhost'),
         ],
         'securityDefinitions' => [
     'securitySchemes' => [
