@@ -1,21 +1,21 @@
 openapi: 3.0.0
 info:
-  title: Banque API
-  version: v1.0.0
-  description: API pour gérer les clients et comptes de la banque
+  title: Bank API
+  version: v1.0.1
+  description: API for managing bank clients and accounts
 
 servers:
-  - url: http://127.0.0.1:8000/api/v1
-    description: Serveur local de développement
+  - url: http://localhost:10000/api/v1
+    description: Local development server
+  - url: https://compte-api.onrender.com/
+    description: Production server on Render
 
 tags:
   - name: Clients
-    description: Opérations sur les clients
+    description: Operations on clients
   - name: Comptes
-    description: Opérations sur les comptes
+    description: Operations on accounts
 
-security:
-  - bearerAuth: []
 
 paths:
   /clients:
@@ -485,13 +485,6 @@ paths:
         '401':
           description: Non autorisé
 
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: Entrez le token au format (Bearer <token>)
 
   schemas:
     Client:

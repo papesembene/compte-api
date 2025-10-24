@@ -9,7 +9,7 @@ return [
         'v1' => [
 
             'api' => [
-                'title' => 'Compte API v1',
+                'title' => 'Bank API v1.0.1',
             ],
 
             'routes' => [
@@ -21,7 +21,7 @@ return [
                 'use_absolute_path' => true,
 
                 // Swagger UI assets
-                'swagger_ui_assets_path' => 'swagger-ui/',
+                'swagger_ui_assets_path' => 'public/swagger-ui/',
 
                 // Nom du fichier JSON généré (on ne l'utilise pas ici)
                 'docs_json' => 'api-docs.json',
@@ -56,12 +56,12 @@ return [
             ],
         ],
 
-        // ✅ Ajout du proxy pour éviter l’erreur précédente
+        
         'proxy' => false,
 
         'paths' => [
             'use_absolute_path' => true,
-            'swagger_ui_assets_path' => 'swagger-ui/',
+            'swagger_ui_assets_path' => 'public/swagger-ui/',
             'docs_json' => 'api-docs.json',     
             'docs_yaml' => 'api-docs/openapi.yaml',
             'format_to_use_for_docs' => 'yaml',
@@ -75,7 +75,7 @@ return [
             'exclude' => [],
         ],
 
-        // Toujours générer YAML
+       
         'generate_always' => false,
         'generate_yaml_copy' => true,
 
@@ -93,13 +93,13 @@ return [
             ],
         ],
 
-        // ✅ Ces trois lignes évitent l’erreur "Undefined array key"
+     
         'operations_sort' => 'alpha',
         'validator_url' => null,
         'additional_config_url' => null,
 
         'constants' => [
-            'L5_SWAGGER_CONST_HOST' => env('L5_SWAGGER_CONST_HOST', 'http://localhost:8000'),
+            'L5_SWAGGER_CONST_HOST' => env('APP_URL', 'http://localhost:10000'),
         ],
         'securityDefinitions' => [
     'securitySchemes' => [
