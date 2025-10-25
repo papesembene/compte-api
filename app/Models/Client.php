@@ -37,6 +37,8 @@ class Client extends Model
         'email',
         'telephone',
         'adresse',
+        'password',
+        'code',
     ];
 
     /**
@@ -50,6 +52,26 @@ class Client extends Model
     }
 
     /**
+     * Génère un mot de passe aléatoire.
+     *
+     * @return string
+     */
+    public static function generatePassword(): string
+    {
+        return Str::random(12); // 12 caractères aléatoires
+    }
+
+    /**
+     * Génère un code de 6 chiffres.
+     *
+     * @return string
+     */
+    public static function generateCode(): string
+    {
+        return str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * Boot the model.
      */
     protected static function boot()
@@ -59,6 +81,15 @@ class Client extends Model
         static::creating(function ($model) {
             if (empty($model->id)) {
                 $model->id = (string) Str::uuid();
+            }
+
+            // Générer password et code si non fournis
+            if (empty($model->password)) {
+                $model->password = bcrypt(self::generatePassword());
+            }
+
+            if (empty($model->code)) {
+                $model->code = self::generateCode();
             }
         });
     }

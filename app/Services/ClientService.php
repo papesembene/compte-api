@@ -32,6 +32,27 @@ class ClientService
     }
 
     /**
+     * Trouve un client existant ou en crée un nouveau avec password et code.
+     *
+     * @param array $data
+     * @return Client
+     */
+    public function findOrCreateClient(array $data): Client
+    {
+        // Vérifier si le client existe par email ou téléphone
+        $client = Client::where('email', $data['email'])
+                        ->orWhere('telephone', $data['telephone'])
+                        ->first();
+
+        if ($client) {
+            return $client;
+        }
+
+        // Créer un nouveau client avec password et code générés
+        return Client::create($data);
+    }
+
+    /**
      * Crée un nouveau client.
      */
     public function createClient(array $data): Client
