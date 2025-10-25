@@ -41,6 +41,13 @@ class Compte extends Model
     ];
 
     /**
+     * Champs visibles dans les réponses JSON (le solde est calculé dynamiquement).
+     */
+    protected $visible = [
+        'solde', 
+    ];
+
+    /**
      * Relation avec le client propriétaire du compte.
      *
      * @return BelongsTo
@@ -145,6 +152,24 @@ class Compte extends Model
             if (empty($model->id)) {
                 $model->id = (string) Str::uuid();
             }
+
+            if (empty($model->numero_compte)) {
+                $model->numero_compte = static::generateNumeroCompte();
+            }
         });
+    }
+
+    /**
+     * Génère un numéro de compte unique.
+     *
+     * @return string
+     */
+    public static function generateNumeroCompte(): string
+    {
+        do {
+            $numero = str_pad(mt_rand(1, 9999999999), 10, '0', STR_PAD_LEFT);
+        } while (static::where('numero_compte', $numero)->exists());
+
+        return $numero;
     }
 }

@@ -13,12 +13,12 @@ return new class extends Migration
     {
          Schema::create('comptes', function (Blueprint $table) {
              $table->uuid('id')->primary();
-             $table->string('numero_compte')->unique();
-             $table->decimal('solde', 15, 2)->default(0);
+             $table->string('numero_compte', 10)->unique();
              $table->string('type_compte'); // e.g., 'courant', 'epargne'
              $table->string('statut')->default('debloque'); // 'bloque' or 'debloque'
              $table->uuid('client_id');
              $table->timestamps();
+             $table->softDeletes();
 
              // Foreign key
              $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
@@ -26,6 +26,8 @@ return new class extends Migration
              // Indexes
              $table->index('numero_compte');
              $table->index('client_id');
+             $table->index('statut');
+             $table->index('type_compte');
          });
      }
 

@@ -20,10 +20,9 @@ class CompteFactory extends Factory
     {
         return [
             'id' => Str::uuid(),
-            'numero_compte' => $this->faker->unique()->numerify('1#########'), // 10 digits starting with 1-9
-            'solde' => $this->faker->randomFloat(2, 0, 1000000), // Solde entre 0 et 1M
+            // numero_compte et solde sont auto-générés par le modèle
             'type_compte' => $this->faker->randomElement(['courant', 'epargne']),
-            'statut' => $this->faker->randomElement(['bloque', 'debloque']),
+            'statut' => 'debloque', // Statut débloqué par défaut pour les tests
             'client_id' => Client::factory(), // Associe à un client existant
         ];
     }

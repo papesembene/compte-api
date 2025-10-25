@@ -3,20 +3,21 @@ info:
   title: Bank API
   version: v1.1.0
   description: |
-    API for managing bank clients and accounts with SMS notifications.
+    API pour la gestion des comptes bancaires avec création automatique de clients et notifications SMS.
 
-    **New in v1.1.0:**
-    - SMS notifications via Twilio integration
-    - Automatic SMS authentication codes when creating accounts
-    - SOLID architecture with dependency injection
-    - Enhanced error handling and logging
+    **Nouveautés v1.1.0:**
+    - Notifications SMS via intégration Twilio
+    - Codes d'authentification SMS automatiques lors de la création de comptes
+    - **Auto-génération** des numéros de compte et calcul du solde
+    - **Création automatique de clients** - pas de gestion client séparée
+    - Architecture SOLID avec injection de dépendances
+    - Gestion d'erreurs et logging améliorés
 
-    **SMS Architecture:**
-    - **SmsNotifierInterface**: Abstraction for SMS providers
-    - **TwilioSmsNotifier**: Production SMS via Twilio API
-    - **FakeSmsNotifier**: Development/testing (no real SMS sent)
-    - **SmsService**: Orchestrates SMS sending with dependency injection
-    - **Automatic notifications**: SMS sent when accounts are created
+    **Architecture:**
+    - **Compte-centrique**: Toutes les opérations via la création de compte
+    - **Auto-génération**: Numéros de compte et calcul du solde
+    - **Intégration SMS**: Notifications automatiques via Twilio
+    - **Principes SOLID**: Architecture propre avec injection de dépendances
 
 servers:
   - url: http://localhost:10000/api/v1
@@ -25,8 +26,6 @@ servers:
     description: Production server on Render
 
 tags:
-  - name: Clients
-    description: Operations on clients
   - name: Comptes
     description: Operations on accounts
   - name: Notifications
@@ -34,12 +33,12 @@ tags:
 
 
 paths:
-  /clients:
+  /comptes:
     get:
-      summary: Lister tous les clients
-      description: Récupère une liste paginée de clients avec options de recherche et tri.
+      summary: Lister tous les comptes
+      description: Récupère une liste paginée de comptes avec options de filtre et tri.
       tags:
-        - Clients
+        - Comptes
       parameters:
         - name: page
           in: query
@@ -103,43 +102,12 @@ paths:
           description: Paramètres invalides
         '401':
           description: Non autorisé
-    post:
-      summary: Créer un nouveau client
-      description: Crée un nouveau client avec validation des données.
-      tags:
-        - Clients
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StoreClientRequest'
-      responses:
-        '201':
-          description: Client créé
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Client'
-                  message:
-                    type: string
-                    example: Client créé avec succès.
-        '400':
-          description: Données invalides
-        '401':
-          description: Non autorisé
-        '422':
-          description: Erreurs de validation
-
-  /api/v1/clients/{id}:
+  /clients/{id}:
     get:
       summary: Récupérer un client spécifique
       description: Récupère les détails d'un client par son ID.
       tags:
-        - Clients
+        - Comptes
       parameters:
         - name: id
           in: path
@@ -165,74 +133,7 @@ paths:
           description: Client non trouvé
         '401':
           description: Non autorisé
-    patch:
-      summary: Mettre à jour un client
-      description: Met à jour les informations d'un client.
-      tags:
-        - Clients
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID du client
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StoreClientRequest'
-      responses:
-        '200':
-          description: Client mis à jour
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Client'
-                  message:
-                    type: string
-                    example: Client mis à jour avec succès.
-        '404':
-          description: Client non trouvé
-        '401':
-          description: Non autorisé
-        '422':
-          description: Erreurs de validation
-    delete:
-      summary: Supprimer un client (soft delete)
-      description: Effectue une suppression logique du client.
-      tags:
-        - Clients
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID du client
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Client supprimé
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Client supprimé avec succès.
-        '404':
-          description: Client non trouvé
-        '401':
-          description: Non autorisé
-
-  /api/v1/comptes:
+  /comptes:
     get:
       summary: Lister tous les comptes
       description: Récupère une liste paginée de comptes avec options de filtre et tri.
@@ -314,13 +215,15 @@ paths:
         Crée un nouveau compte avec création/recherche automatique du client.
 
         **Processus automatique:**
-        - Si le client n'existe pas → Création automatique du client
+        - Si le client n'existe pas → Création automatique avec password et code générés
         - Si le client existe → Association avec le compte existant
+        - **Numéro de compte auto-généré** (10 chiffres unique)
+        - **Solde = Somme des Dépôts - Somme des Retraits** (calculé dynamiquement)
         - Un email avec les identifiants est envoyé au client
         - Un SMS avec le code d'authentification est envoyé au numéro du client
-        - Le compte est créé avec le solde initial spécifié
+        - Si solde_initial fourni → Création d'une transaction de dépôt
 
-        **Note:** Pas besoin d'endpoint client séparé - tout est géré automatiquement.
+        **Note:** Architecture compte-centrique - gestion complète via les comptes uniquement.
       tags:
         - Comptes
       requestBody:
@@ -332,10 +235,8 @@ paths:
             examples:
               nouveau_client:
                 summary: Création avec nouveau client
-                description: Crée un compte pour un client qui n'existe pas encore
+                description: Crée un compte pour un client qui n'existe pas encore (numéro et solde auto-générés)
                 value:
-                  numero_compte: "1234567890"
-                  solde_initial: 1000.50
                   type_compte: "courant"
                   client:
                     titulaire: "John Doe"
@@ -345,13 +246,23 @@ paths:
                     adresse: "Dakar, Senegal"
               client_existant:
                 summary: Création avec client existant
-                description: Crée un compte pour un client déjà enregistré
+                description: Crée un compte pour un client déjà enregistré (numéro et solde auto-générés)
                 value:
-                  numero_compte: "9876543210"
-                  solde_initial: 500.00
                   type_compte: "epargne"
                   client:
                     id: "550e8400-e29b-41d4-a716-446655440000"
+              avec_solde:
+                summary: Création avec solde initial
+                description: Crée un compte avec un dépôt initial (numéro auto-généré)
+                value:
+                  solde_initial: 1000.50
+                  type_compte: "courant"
+                  client:
+                    titulaire: "Jane Smith"
+                    nci: "9876543210987"
+                    email: "jane.smith@example.com"
+                    telephone: "+221702345678"
+                    adresse: "Dakar, Senegal"
       responses:
         '201':
           description: Compte créé avec succès
@@ -391,6 +302,26 @@ paths:
                       created_at: "2025-10-25T18:00:00.000000Z"
                       updated_at: "2025-10-25T18:00:00.000000Z"
                     message: Compte créé avec succès.
+                response_auto_generated:
+                  summary: Réponse avec génération automatique
+                  value:
+                    data:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      numero_compte: "9876543210"
+                      solde: 0.00
+                      type_compte: "courant"
+                      statut: "debloque"
+                      client_id: "550e8400-e29b-41d4-a716-446655440001"
+                      client:
+                        id: "550e8400-e29b-41d4-a716-446655440001"
+                        titulaire: "Jane Smith"
+                        nci: "9876543210987"
+                        email: "jane.smith@example.com"
+                        telephone: "+221702345678"
+                        adresse: "Dakar, Senegal"
+                      created_at: "2025-10-25T18:00:00.000000Z"
+                      updated_at: "2025-10-25T18:00:00.000000Z"
+                    message: Compte créé avec succès.
         '400':
           description: Données invalides
         '401':
@@ -398,7 +329,7 @@ paths:
         '422':
           description: Erreurs de validation
 
-  /api/v1/comptes/archives:
+  /comptes/archives:
     get:
       summary: Lister les comptes archivés
       description: Récupère une liste paginée des comptes archivés (soft deleted).
@@ -463,7 +394,7 @@ paths:
         '401':
           description: Non autorisé
 
-  /api/v1/comptes/non-archives:
+  /comptes/non-archives:
     get:
       summary: Lister les comptes non archivés
       description: Récupère une liste paginée des comptes actifs (non supprimés).
@@ -528,7 +459,7 @@ paths:
         '401':
           description: Non autorisé
 
-  /api/v1/comptes/{id}:
+  /comptes/{id}:
     get:
       summary: Récupérer un compte spécifique
       description: Récupère les détails d'un compte par son ID.
@@ -626,7 +557,7 @@ paths:
         '401':
           description: Non autorisé
 
-  /api/v1/comptes/{id}/bloquer:
+  /comptes/{id}/bloquer:
     post:
       summary: Bloquer un compte
       description: Bloque un compte pour empêcher les transactions.
@@ -658,7 +589,7 @@ paths:
         '401':
           description: Non autorisé
 
-  /api/v1/comptes/{id}/debloquer:
+  /comptes/{id}/debloquer:
     post:
       summary: Débloquer un compte
       description: Débloque un compte pour permettre les transactions.
@@ -733,12 +664,13 @@ components:
           example: "550e8400-e29b-41d4-a716-446655440000"
         numero_compte:
           type: string
-          description: Numéro de compte (10 chiffres commençant par 1-9)
+          description: "Numéro de compte (auto-généré, 10 chiffres)"
           example: "1234567890"
+          readOnly: true
         solde:
           type: number
           format: float
-          description: Solde actuel du compte (calculé dynamiquement)
+          description: "Solde = Somme des Dépôts - Somme des Retraits (calculé dynamiquement)"
           example: 1000.50
         type_compte:
           type: string
@@ -763,49 +695,20 @@ components:
           type: string
           format: date-time
 
-    StoreClientRequest:
-      type: object
-      required:
-        - titulaire
-        - nci
-        - email
-        - telephone
-        - adresse
-      properties:
-        titulaire:
-          type: string
-          example: "John Doe"
-        nci:
-          type: string
-          description: Numéro de Carte d'Identité Nationale (13 chiffres)
-          example: "1234567890123"
-        email:
-          type: string
-          format: email
-          example: "john.doe@example.com"
-        telephone:
-          type: string
-          description: Numéro de téléphone sénégalais (+221 7X XXXXXXX)
-          example: "+221701234567"
-        adresse:
-          type: string
-          example: "Dakar, Senegal"
-
     StoreCompteRequest:
       type: object
       required:
-        - numero_compte
         - type_compte
         - client
       properties:
         numero_compte:
           type: string
-          description: Numéro de compte (10 chiffres commençant par 1-9)
+          description: Numéro de compte (auto-généré si non fourni)
           example: "1234567890"
         solde_initial:
           type: number
           format: float
-          description: "Solde initial du compte (optionnel, defaut: 0)"
+          description: "Solde initial du compte (optionnel, défaut: 0)"
           example: 1000.50
         type_compte:
           type: string

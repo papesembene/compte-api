@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('comptes', function (Blueprint $table) {
-            $table->dropColumn('solde');
-        });
+        // Vérifier si la colonne existe avant de la supprimer
+        if (Schema::hasColumn('comptes', 'solde')) {
+            Schema::table('comptes', function (Blueprint $table) {
+                $table->dropColumn('solde');
+            });
+        }
     }
 
     /**

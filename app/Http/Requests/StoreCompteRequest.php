@@ -21,8 +21,7 @@ class StoreCompteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'numero_compte' => ['required', 'string', 'unique:comptes,numero_compte', new NumeroCompteRule()],
-            'solde_initial' => ['nullable', 'numeric', 'min:0'],
+            'numero_compte' => ['nullable', 'string', 'unique:comptes,numero_compte', new NumeroCompteRule()],
             'type_compte' => ['required', 'string', 'in:courant,epargne'],
             'client' => ['required', 'array'],
             'client.id' => ['nullable', 'uuid', 'exists:clients,id'],
@@ -37,10 +36,7 @@ class StoreCompteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'numero_compte.required' => 'Le champ numéro de compte est obligatoire.',
             'numero_compte.unique' => 'Ce numéro de compte est déjà utilisé.',
-            'solde_initial.numeric' => 'Le solde initial doit être un nombre.',
-            'solde_initial.min' => 'Le solde initial ne peut pas être négatif.',
             'type_compte.required' => 'Le champ type de compte est obligatoire.',
             'type_compte.in' => 'Le type de compte doit être courant ou epargne.',
             'client.required' => 'Les informations du client sont obligatoires.',

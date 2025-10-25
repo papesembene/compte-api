@@ -72,8 +72,8 @@ class CompteController extends Controller
 
     public function nonArchives(Request $request): JsonResponse
     {
-        $comptes = Compte::nonSupprime()
-                         ->actif()
+        $comptes = Compte::nonSupprime() // Utilise le scope pour exclure les supprimés
+                         ->actif()      // Filtre les comptes débloqués
                          ->with('client')
                          ->paginate($request->get('limit', 10));
 

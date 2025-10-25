@@ -39,7 +39,7 @@ class CompteService
      */
     public function getComptes(array $params): LengthAwarePaginator
     {
-        $query = Compte::with('client');
+        $query = Compte::with('client')->nonSupprime(); // Utilise le scope pour exclure les supprimés
 
         if (isset($params['type'])) {
             $query->where('type_compte', $params['type']);

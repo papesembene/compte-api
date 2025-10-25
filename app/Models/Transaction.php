@@ -51,11 +51,11 @@ class Transaction extends Model
     /**
      * Relation avec le client via le compte.
      *
-     * @return BelongsTo
+     * @return Client|null
      */
-    public function client(): BelongsTo
+    public function getClientAttribute()
     {
-        return $this->belongsTo(Client::class, 'compte_id', 'client_id');
+        return $this->compte?->client;
     }
 
     /**

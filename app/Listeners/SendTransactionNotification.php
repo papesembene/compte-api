@@ -33,7 +33,7 @@ class SendTransactionNotification implements ShouldQueue
     public function handle(TransactionValidated $event): void
     {
         $transaction = $event->transaction;
-        $client = $transaction->client;
+        $client = $transaction->client; // Utilise l'accessor getClientAttribute
 
         if ($client && $client->telephone) {
             $message = "Transaction {$transaction->type} de {$transaction->montant} FCFA effectuée avec succès sur le compte {$transaction->compte->numero_compte}.";
