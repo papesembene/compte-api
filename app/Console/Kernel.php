@@ -12,7 +12,15 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Archiver les transactions vers Neon quotidiennement à minuit
+        $schedule->job(\App\Jobs\ArchiveDailyTransactionsJob::class)
+                 ->dailyAt('00:00')
+                 ->description('Archiver les transactions vers Neon');
+
+        // Synchroniser les statuts de blocage des comptes toutes les heures
+        $schedule->job(\App\Jobs\SyncBlockedAccountsJob::class)
+                 ->hourly()
+                 ->description('Synchroniser les statuts de blocage des comptes');
     }
 
     /**
