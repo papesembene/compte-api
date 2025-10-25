@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\Compte;
+use App\Models\Transaction;
+use App\Repositories\TransactionRepositoryManager;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Service pour la gestion des comptes.
@@ -12,6 +15,12 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 class CompteService
 {
+    private TransactionRepositoryManager $transactionRepository;
+
+    public function __construct(TransactionRepositoryManager $transactionRepository)
+    {
+        $this->transactionRepository = $transactionRepository;
+    }
     /**
      * Récupère une liste paginée de comptes avec options de filtre et tri.
      */
@@ -38,11 +47,31 @@ class CompteService
     }
 
     /**
-     * Crée un nouveau compte.
+     * Crée un nouveau compte avec solde initial via transaction de dépôt.
      */
     public function createCompte(array $data): Compte
     {
-        return Compte::create($data);
+        return DB::transaction(function () use ($data) {
+            // Extraire solde_initial si présent
+            $soldeInitial = $data['solde_initial'] ?? 0;
+            unset($data['solde_initial']);
+
+            // Créer le compte
+            $compte = Compte::create($data);
+
+            // Si solde initial > 0, créer une transaction de dépôt
+            if ($soldeInitial > 0) {
+                $this->transactionRepository->createTransaction([
+                    'compte_id' => $compte->id,
+                    'type' => 'depot',
+                    'montant' => $soldeInitial,
+                    'date_transaction' => now(),
+                    'statut' => 'termine',
+                ]);
+            }
+
+            return $compte->load('client');
+        });
     }
 
     /**
