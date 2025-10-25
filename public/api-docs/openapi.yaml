@@ -805,7 +805,7 @@ components:
         solde_initial:
           type: number
           format: float
-          description: Solde initial du compte (optionnel, défaut: 0)
+          description: "Solde initial du compte (optionnel, defaut: 0)"
           example: 1000.50
         type_compte:
           type: string
