@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -68,7 +69,7 @@ class Compte extends Model
     {
         return $this->transactions()
             ->where('statut', 'termine')
-            ->sum(\DB::raw("CASE WHEN type = 'depot' THEN montant ELSE -montant END"));
+            ->sum(DB::raw("CASE WHEN type = 'depot' THEN montant ELSE -montant END"));
     }
 
     /**
