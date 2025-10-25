@@ -98,6 +98,43 @@ class Compte extends Model
     }
 
     /**
+     * Scope global pour récupérer les comptes non supprimés (non soft deleted).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNonSupprime($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
+
+    /**
+     * Scope local pour récupérer un compte par son numéro.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $numero
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNumero($query, $numero)
+    {
+        return $query->where('numero_compte', $numero);
+    }
+
+    /**
+     * Scope local pour récupérer les comptes d'un client par téléphone.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $telephone
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeParClient($query, $telephone)
+    {
+        return $query->whereHas('client', function ($q) use ($telephone) {
+            $q->where('telephone', $telephone);
+        });
+    }
+
+    /**
      * Boot the model.
      */
     protected static function boot()

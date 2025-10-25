@@ -30,4 +30,8 @@ Route::middleware('throttle:api')->prefix('v1')->group(function () {
     Route::apiResource('comptes', CompteController::class);
     Route::post('comptes/{compte}/bloquer', [CompteController::class, 'bloquer']);
     Route::post('comptes/{compte}/debloquer', [CompteController::class, 'debloquer']);
+
+    // Liste des comptes
+    Route::get('comptes/non-archives', [CompteController::class, 'nonArchives']);
+    Route::get('comptes/archives', [CompteController::class, 'archives']);
 });
