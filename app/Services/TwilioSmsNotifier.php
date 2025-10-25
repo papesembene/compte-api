@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\SmsNotifierInterface;
 use Illuminate\Support\Facades\Log;
+use Twilio\Rest\Client;
 
 /**
  * Service pour envoyer des SMS via Twilio.
@@ -12,6 +13,19 @@ use Illuminate\Support\Facades\Log;
  */
 class TwilioSmsNotifier implements SmsNotifierInterface
 {
+    protected Client $twilio;
+
+    /**
+     * Constructeur pour initialiser le client Twilio.
+     */
+    public function __construct()
+    {
+        $this->twilio = new Client(
+            config('services.twilio.sid'),
+            config('services.twilio.token')
+        );
+    }
+
     /**
      * Envoie un SMS via Twilio.
      *
@@ -21,11 +35,22 @@ class TwilioSmsNotifier implements SmsNotifierInterface
      */
     public function send(string $to, string $message): bool
     {
-        // Simulation d'envoi via Twilio
-        // En production : utiliser Twilio SDK
+        try {
+            $this->twilio->messages->create(
+                $to,
+                [
+                    'from' => config('services.twilio.from'),
+                    'body' => $message,
+                ]
+            );
 
-        Log::info("SMS envoyé via Twilio à {$to} : {$message}");
+            Log::info("SMS envoyé via Twilio à {$to} : {$message}");
 
-        return true;
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de l'envoi du SMS via Twilio : " . $e->getMessage());
+
+            return false;
+        }
     }
 }

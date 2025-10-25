@@ -21,6 +21,13 @@ class AppServiceProvider extends ServiceProvider
             // Utiliser FakeSmsNotifier en développement, TwilioSmsNotifier en production
             return app(\App\Services\FakeSmsNotifier::class);
         });
+
+        // Enregistrer le binding pour SmsService avec injection de dépendance
+        $this->app->bind(\App\Services\SmsService::class, function ($app) {
+            return new \App\Services\SmsService(
+                $app->make(\App\Contracts\SmsNotifierInterface::class)
+            );
+        });
     }
 
     /**

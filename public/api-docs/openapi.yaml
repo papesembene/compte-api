@@ -1,8 +1,22 @@
 openapi: 3.0.0
 info:
   title: Bank API
-  version: v1.0.1
-  description: API for managing bank clients and accounts
+  version: v1.1.0
+  description: |
+    API for managing bank clients and accounts with SMS notifications.
+
+    **New in v1.1.0:**
+    - SMS notifications via Twilio integration
+    - Automatic SMS authentication codes when creating accounts
+    - SOLID architecture with dependency injection
+    - Enhanced error handling and logging
+
+    **SMS Architecture:**
+    - **SmsNotifierInterface**: Abstraction for SMS providers
+    - **TwilioSmsNotifier**: Production SMS via Twilio API
+    - **FakeSmsNotifier**: Development/testing (no real SMS sent)
+    - **SmsService**: Orchestrates SMS sending with dependency injection
+    - **Automatic notifications**: SMS sent when accounts are created
 
 servers:
   - url: http://localhost:10000/api/v1
@@ -15,6 +29,8 @@ tags:
     description: Operations on clients
   - name: Comptes
     description: Operations on accounts
+  - name: Notifications
+    description: SMS and email notifications
 
 
 paths:
@@ -294,7 +310,13 @@ paths:
           description: Non autorisé
     post:
       summary: Créer un nouveau compte
-      description: Crée un nouveau compte pour un client existant.
+      description: |
+        Crée un nouveau compte pour un client existant.
+
+        **Notifications automatiques:**
+        - Un email avec les identifiants est envoyé au client
+        - Un SMS avec le code d'authentification est envoyé au numéro du client
+        - Le compte est créé avec le solde initial spécifié
       tags:
         - Comptes
       requestBody:
@@ -322,6 +344,136 @@ paths:
           description: Non autorisé
         '422':
           description: Erreurs de validation
+
+  /api/v1/comptes/archives:
+    get:
+      summary: Lister les comptes archivés
+      description: Récupère une liste paginée des comptes archivés (soft deleted).
+      tags:
+        - Comptes
+      parameters:
+        - name: page
+          in: query
+          description: Numéro de page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Nombre d'éléments par page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sort
+          in: query
+          description: Champ de tri
+          schema:
+            type: string
+            enum: [id, numero_compte, solde, created_at]
+            default: created_at
+        - name: order
+          in: query
+          description: Ordre de tri
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Liste des comptes archivés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Compte'
+                  currentPage:
+                    type: integer
+                    example: 1
+                  totalPages:
+                    type: integer
+                    example: 5
+                  totalItems:
+                    type: integer
+                    example: 50
+                  message:
+                    type: string
+                    example: Comptes archivés récupérés avec succès.
+        '400':
+          description: Paramètres invalides
+        '401':
+          description: Non autorisé
+
+  /api/v1/comptes/non-archives:
+    get:
+      summary: Lister les comptes non archivés
+      description: Récupère une liste paginée des comptes actifs (non supprimés).
+      tags:
+        - Comptes
+      parameters:
+        - name: page
+          in: query
+          description: Numéro de page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Nombre d'éléments par page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sort
+          in: query
+          description: Champ de tri
+          schema:
+            type: string
+            enum: [id, numero_compte, solde, created_at]
+            default: created_at
+        - name: order
+          in: query
+          description: Ordre de tri
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Liste des comptes non archivés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Compte'
+                  currentPage:
+                    type: integer
+                    example: 1
+                  totalPages:
+                    type: integer
+                    example: 5
+                  totalItems:
+                    type: integer
+                    example: 50
+                  message:
+                    type: string
+                    example: Comptes non archivés récupérés avec succès.
+        '400':
+          description: Paramètres invalides
+        '401':
+          description: Non autorisé
 
   /api/v1/comptes/{id}:
     get:

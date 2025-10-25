@@ -12,7 +12,8 @@
         "laravel/passport": "^12.4",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "swagger-api/swagger-ui": "^5.0"
+        "swagger-api/swagger-ui": "^5.0",
+        "twilio/sdk": "^8.8"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",
