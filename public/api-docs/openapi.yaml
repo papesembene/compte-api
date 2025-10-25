@@ -311,12 +311,16 @@ paths:
     post:
       summary: Créer un nouveau compte
       description: |
-        Crée un nouveau compte pour un client existant.
+        Crée un nouveau compte avec création/recherche automatique du client.
 
-        **Notifications automatiques:**
+        **Processus automatique:**
+        - Si le client n'existe pas → Création automatique du client
+        - Si le client existe → Association avec le compte existant
         - Un email avec les identifiants est envoyé au client
         - Un SMS avec le code d'authentification est envoyé au numéro du client
         - Le compte est créé avec le solde initial spécifié
+
+        **Note:** Pas besoin d'endpoint client séparé - tout est géré automatiquement.
       tags:
         - Comptes
       requestBody:
@@ -325,19 +329,68 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/StoreCompteRequest'
+            examples:
+              nouveau_client:
+                summary: Création avec nouveau client
+                description: Crée un compte pour un client qui n'existe pas encore
+                value:
+                  numero_compte: "1234567890"
+                  solde_initial: 1000.50
+                  type_compte: "courant"
+                  client:
+                    titulaire: "John Doe"
+                    nci: "1234567890123"
+                    email: "john.doe@example.com"
+                    telephone: "+221701234567"
+                    adresse: "Dakar, Senegal"
+              client_existant:
+                summary: Création avec client existant
+                description: Crée un compte pour un client déjà enregistré
+                value:
+                  numero_compte: "9876543210"
+                  solde_initial: 500.00
+                  type_compte: "epargne"
+                  client:
+                    id: "550e8400-e29b-41d4-a716-446655440000"
       responses:
         '201':
-          description: Compte créé
+          description: Compte créé avec succès
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/Compte'
+                    allOf:
+                      - $ref: '#/components/schemas/Compte'
+                      - type: object
+                        properties:
+                          client:
+                            $ref: '#/components/schemas/Client'
                   message:
                     type: string
                     example: Compte créé avec succès.
+              examples:
+                response_nouveau_client:
+                  summary: Réponse avec nouveau client créé
+                  value:
+                    data:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      numero_compte: "1234567890"
+                      solde: 1000.50
+                      type_compte: "courant"
+                      statut: "debloque"
+                      client_id: "550e8400-e29b-41d4-a716-446655440001"
+                      client:
+                        id: "550e8400-e29b-41d4-a716-446655440001"
+                        titulaire: "John Doe"
+                        nci: "1234567890123"
+                        email: "john.doe@example.com"
+                        telephone: "+221701234567"
+                        adresse: "Dakar, Senegal"
+                      created_at: "2025-10-25T18:00:00.000000Z"
+                      updated_at: "2025-10-25T18:00:00.000000Z"
+                    message: Compte créé avec succès.
         '400':
           description: Données invalides
         '401':
@@ -685,7 +738,7 @@ components:
         solde:
           type: number
           format: float
-          description: Solde calculé du compte
+          description: Solde actuel du compte (calculé dynamiquement)
           example: 1000.50
         type_compte:
           type: string
@@ -698,9 +751,11 @@ components:
         client_id:
           type: string
           format: uuid
+          description: ID du client propriétaire
           example: "550e8400-e29b-41d4-a716-446655440000"
         client:
           $ref: '#/components/schemas/Client'
+          description: Informations complètes du client (inclus dans toutes les réponses)
         created_at:
           type: string
           format: date-time
@@ -740,23 +795,55 @@ components:
       type: object
       required:
         - numero_compte
-        - solde
         - type_compte
-        - client_id
+        - client
       properties:
         numero_compte:
           type: string
           description: Numéro de compte (10 chiffres commençant par 1-9)
           example: "1234567890"
-        solde:
+        solde_initial:
           type: number
           format: float
+          description: Solde initial du compte (optionnel, défaut: 0)
           example: 1000.50
         type_compte:
           type: string
           enum: [courant, epargne]
           example: "courant"
-        client_id:
-          type: string
-          format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
+        client:
+          type: object
+          description: Informations du client (créé automatiquement si n'existe pas)
+          required:
+            - titulaire
+            - nci
+            - email
+            - telephone
+            - adresse
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: ID du client existant (optionnel - si fourni, utilise le client existant)
+              example: "550e8400-e29b-41d4-a716-446655440000"
+            titulaire:
+              type: string
+              description: Nom complet du titulaire
+              example: "John Doe"
+            nci:
+              type: string
+              description: Numéro de Carte d'Identité Nationale (13 chiffres)
+              example: "1234567890123"
+            email:
+              type: string
+              format: email
+              description: Email du client
+              example: "john.doe@example.com"
+            telephone:
+              type: string
+              description: Numéro de téléphone (+221 7X XXXXXXX)
+              example: "+221701234567"
+            adresse:
+              type: string
+              description: Adresse du client
+              example: "Dakar, Senegal"
