@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTransactionRequest;
-use App\Http\Requests\StoreVirementRequest;
 use App\Models\Compte;
 use App\Models\Transaction;
 use App\Services\TransactionService;
@@ -15,7 +14,7 @@ use Illuminate\Http\Request;
 /**
  * Contrôleur pour gérer les transactions bancaires.
  *
- * Responsabilité : Gérer les opérations de dépôt, retrait et virement.
+ * Responsabilité : Gérer les opérations de dépôt et retrait.
  */
 class TransactionController extends Controller
 {
@@ -45,7 +44,7 @@ class TransactionController extends Controller
                 201
             );
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), [], 400);
+            return $this->errorResponse($e->getMessage(),  400);
         }
     }
 
@@ -66,39 +65,11 @@ class TransactionController extends Controller
                 201
             );
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), [], 400);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 
-    /**
-     * Effectuer un virement entre comptes.
-     */
-    public function virement(StoreVirementRequest $request): JsonResponse
-    {
-        try {
-            $compteSource = Compte::findOrFail($request->validated()['compte_source']);
-            $compteDestination = Compte::findOrFail($request->validated()['compte_destination']);
 
-            $result = $this->transactionService->effectuerVirement(
-                $compteSource,
-                $compteDestination,
-                $request->validated()
-            );
-
-            return $this->successResponse(
-                [
-                    'transaction_debit' => $result['transaction_debit']->load('compte.client'),
-                    'transaction_credit' => $result['transaction_credit']->load('compte.client'),
-                    'solde_source' => $compteSource->fresh()->solde,
-                    'solde_destination' => $compteDestination->fresh()->solde,
-                ],
-                'Virement effectué avec succès.',
-                201
-            );
-        } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), [], 400);
-        }
-    }
 
     /**
      * Obtenir l'historique des transactions d'un compte.
@@ -117,7 +88,7 @@ class TransactionController extends Controller
                 'Historique des transactions récupéré avec succès.'
             );
         } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la récupération de l\'historique.', ['message' => $e->getMessage()], 500);
+            return $this->errorResponse('Erreur lors de la récupération de l\'historique.',  500);
         }
     }
 
@@ -134,7 +105,7 @@ class TransactionController extends Controller
                 'Détails de la transaction récupérés avec succès.'
             );
         } catch (\Exception $e) {
-            return $this->errorResponse('Transaction non trouvée.', ['message' => $e->getMessage()], 404);
+            return $this->errorResponse('Transaction non trouvée.', 404);
         }
     }
 }

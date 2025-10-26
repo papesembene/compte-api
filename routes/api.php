@@ -38,7 +38,6 @@ Route::middleware('throttle:api')->prefix('v1')->group(function () {
     // Transactions
     Route::post('transactions/depot/{compte}', [TransactionController::class, 'depot']);
     Route::post('transactions/retrait/{compte}', [TransactionController::class, 'retrait']);
-    Route::post('transactions/virement', [TransactionController::class, 'virement']);
     Route::get('transactions/historique/{compte}', [TransactionController::class, 'historique']);
     Route::get('transactions/{transaction}', [TransactionController::class, 'show']);
 });
