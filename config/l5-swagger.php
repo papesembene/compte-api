@@ -102,18 +102,14 @@ return [
             'base' => env('L5_SWAGGER_BASE_PATH', null),
         ],
 
-        'scanOptions' => [
-            'pattern' => 'app/**/*.php',
-            'in' => base_path(),
-            'exclude' => [],
-        ],
+        'scanOptions' => [],
 
         /*
         |--------------------------------------------------------------------------
         | Génération
         |--------------------------------------------------------------------------
         */
-        'generate_always' => true,
+        'generate_always' => false,
         'generate_yaml_copy' => true,
 
         /*
