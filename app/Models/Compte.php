@@ -43,8 +43,8 @@ class Compte extends Model
     /**
      * Champs visibles dans les réponses JSON (le solde est calculé dynamiquement).
      */
-    protected $visible = [
-        'solde', 
+    protected $appends = [
+        'solde',
     ];
 
     /**

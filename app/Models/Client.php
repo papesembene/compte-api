@@ -42,6 +42,14 @@ class Client extends Model
     ];
 
     /**
+     * Champs cachés dans les réponses JSON.
+     */
+    protected $hidden = [
+        'password',
+        'code',
+    ];
+
+    /**
      * Relation avec les comptes du client.
      *
      * @return HasMany

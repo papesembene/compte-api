@@ -82,8 +82,7 @@ class CompteController extends Controller
 
     public function archives(Request $request): JsonResponse
     {
-        $comptes = Compte::on('neon')
-                         ->nonSupprime()
+        $comptes = Compte::nonSupprime()
                          ->with('client')
                          ->paginate($request->get('limit', 10));
 

@@ -102,7 +102,9 @@ return [
             'base' => env('L5_SWAGGER_BASE_PATH', null),
         ],
 
-        'scanOptions' => [],
+        'scanOptions' => [
+            'exclude' => [],
+        ],
 
         /*
         |--------------------------------------------------------------------------
