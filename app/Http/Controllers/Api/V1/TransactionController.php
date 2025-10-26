@@ -45,7 +45,7 @@ class TransactionController extends Controller
                 201
             );
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(),  400);
+            return $this->errorResponse($e->getMessage(), [], 400);
         }
     }
 
@@ -66,7 +66,7 @@ class TransactionController extends Controller
                 201
             );
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 400);
+            return $this->errorResponse($e->getMessage(), [], 400);
         }
     }
 
@@ -76,8 +76,8 @@ class TransactionController extends Controller
     public function virement(StoreVirementRequest $request): JsonResponse
     {
         try {
-            $compteSource = Compte::findOrFail($request->compte_source);
-            $compteDestination = Compte::findOrFail($request->compte_destination);
+            $compteSource = Compte::findOrFail($request->validated()['compte_source']);
+            $compteDestination = Compte::findOrFail($request->validated()['compte_destination']);
 
             $result = $this->transactionService->effectuerVirement(
                 $compteSource,
