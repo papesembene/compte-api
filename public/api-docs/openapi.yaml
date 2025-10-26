@@ -33,6 +33,309 @@ tags:
 
 
 paths:
+  /transactions/depot/{compteId}:
+    post:
+      summary: Effectuer un dépôt sur un compte
+      description: Permet d'effectuer un dépôt sur un compte bancaire existant.
+      tags:
+        - Transactions
+      parameters:
+        - name: compteId
+          in: path
+          required: true
+          description: ID du compte
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - montant
+              properties:
+                montant:
+                  type: number
+                  format: float
+                  minimum: 100
+                  maximum: 10000000
+                  example: 5000
+                description:
+                  type: string
+                  maxLength: 255
+                  example: "Dépôt initial"
+      responses:
+        '201':
+          description: Dépôt effectué avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Dépôt effectué avec succès"
+                  data:
+                    type: object
+                    properties:
+                      transaction:
+                        $ref: '#/components/schemas/Transaction'
+                      nouveau_solde:
+                        type: number
+                        format: float
+                        example: 15000
+        '400':
+          description: Données invalides ou compte bloqué
+        '404':
+          description: Compte non trouvé
+        '422':
+          description: Erreur de validation
+
+  /transactions/retrait/{compteId}:
+    post:
+      summary: Effectuer un retrait sur un compte
+      description: Permet d'effectuer un retrait sur un compte bancaire existant.
+      tags:
+        - Transactions
+      parameters:
+        - name: compteId
+          in: path
+          required: true
+          description: ID du compte
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - montant
+              properties:
+                montant:
+                  type: number
+                  format: float
+                  minimum: 100
+                  maximum: 10000000
+                  example: 2000
+                description:
+                  type: string
+                  maxLength: 255
+                  example: "Retrait DAB"
+      responses:
+        '201':
+          description: Retrait effectué avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Retrait effectué avec succès"
+                  data:
+                    type: object
+                    properties:
+                      transaction:
+                        $ref: '#/components/schemas/Transaction'
+                      nouveau_solde:
+                        type: number
+                        format: float
+                        example: 13000
+        '400':
+          description: Solde insuffisant ou compte bloqué
+        '404':
+          description: Compte non trouvé
+        '422':
+          description: Erreur de validation
+
+  /transactions/virement:
+    post:
+      summary: Effectuer un virement entre comptes
+      description: Permet d'effectuer un virement entre deux comptes bancaires.
+      tags:
+        - Transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - compte_source
+                - compte_destination
+                - montant
+              properties:
+                compte_source:
+                  type: string
+                  format: uuid
+                  description: ID du compte source
+                  example: "0194b8b0-0000-7000-8000-000000000001"
+                compte_destination:
+                  type: string
+                  format: uuid
+                  description: ID du compte destination
+                  example: "0194b8b0-0000-7000-8000-000000000002"
+                montant:
+                  type: number
+                  format: float
+                  minimum: 100
+                  maximum: 10000000
+                  example: 3000
+                description:
+                  type: string
+                  maxLength: 255
+                  example: "Paiement facture"
+      responses:
+        '201':
+          description: Virement effectué avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Virement effectué avec succès"
+                  data:
+                    type: object
+                    properties:
+                      transaction_debit:
+                        $ref: '#/components/schemas/Transaction'
+                      transaction_credit:
+                        $ref: '#/components/schemas/Transaction'
+                      solde_source:
+                        type: number
+                        format: float
+                        example: 10000
+                      solde_destination:
+                        type: number
+                        format: float
+                        example: 8000
+        '400':
+          description: Comptes bloqués ou solde insuffisant
+        '404':
+          description: Compte non trouvé
+        '422':
+          description: Erreur de validation
+
+  /transactions/historique/{compteId}:
+    get:
+      summary: Obtenir l'historique des transactions d'un compte
+      description: Récupère la liste paginée des transactions d'un compte.
+      tags:
+        - Transactions
+      parameters:
+        - name: compteId
+          in: path
+          required: true
+          description: ID du compte
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Numéro de page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Nombre d'éléments par page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Historique récupéré avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Historique des transactions récupéré avec succès"
+                  data:
+                    type: object
+                    properties:
+                      compte:
+                        $ref: '#/components/schemas/Compte'
+                      transactions:
+                        type: object
+                        properties:
+                          current_page:
+                            type: integer
+                            example: 1
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Transaction'
+                          total:
+                            type: integer
+                            example: 25
+                          per_page:
+                            type: integer
+                            example: 20
+                      solde_actuel:
+                        type: number
+                        format: float
+                        example: 15000
+        '404':
+          description: Compte non trouvé
+
+  /transactions/{transactionId}:
+    get:
+      summary: Obtenir les détails d'une transaction
+      description: Récupère les détails complets d'une transaction spécifique.
+      tags:
+        - Transactions
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          description: ID de la transaction
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Détails de la transaction récupérés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Détails de la transaction récupérés avec succès"
+                  data:
+                    $ref: '#/components/schemas/Transaction'
+        '404':
+          description: Transaction non trouvée
+
   /clients/{id}:
     get:
       summary: Récupérer un client spécifique
@@ -553,7 +856,60 @@ paths:
           description: Non autorisé
 
 components:
- schemas:
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID unique de la transaction
+          example: "0194b8b0-0000-7000-8000-000000000003"
+        compte_id:
+          type: string
+          format: uuid
+          description: ID du compte associé
+          example: "0194b8b0-0000-7000-8000-000000000001"
+        compte_destination_id:
+          type: string
+          format: uuid
+          description: ID du compte destination (pour virements)
+          nullable: true
+          example: null
+        type:
+          type: string
+          enum: [depot, retrait]
+          description: Type de transaction
+          example: "depot"
+        montant:
+          type: number
+          format: float
+          description: Montant de la transaction
+          example: 5000
+        date_transaction:
+          type: string
+          format: date-time
+          description: Date et heure de la transaction
+          example: "2025-01-15T10:30:00Z"
+        statut:
+          type: string
+          enum: [termine, en_cours, annule]
+          description: Statut de la transaction
+          example: "termine"
+        description:
+          type: string
+          description: Description optionnelle de la transaction
+          nullable: true
+          example: "Dépôt initial"
+        compte:
+          $ref: '#/components/schemas/Compte'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
     Client:
       type: object
       properties:

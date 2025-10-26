@@ -17,24 +17,20 @@ class CompteSeeder extends Seeder
         Compte::factory(20)->create()->each(function ($compte) {
             // Ajouter quelques transactions pour calculer le solde
             $montantDepot = rand(1000, 10000);
-            \App\Models\Transaction::create([
-                'id' => \Illuminate\Support\Str::uuid(),
+            \App\Models\Transaction::factory()->create([
                 'compte_id' => $compte->id,
                 'type' => 'depot',
                 'montant' => $montantDepot,
-                'date_transaction' => now()->subDays(rand(0, 30)),
                 'statut' => 'termine',
             ]);
 
             // Ajouter quelques retraits (optionnel)
             if (rand(0, 1)) {
                 $montantRetrait = rand(100, $montantDepot / 2);
-                \App\Models\Transaction::create([
-                    'id' => \Illuminate\Support\Str::uuid(),
+                \App\Models\Transaction::factory()->create([
                     'compte_id' => $compte->id,
                     'type' => 'retrait',
                     'montant' => $montantRetrait,
-                    'date_transaction' => now()->subDays(rand(0, 15)),
                     'statut' => 'termine',
                 ]);
             }
