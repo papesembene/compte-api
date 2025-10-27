@@ -1,11 +1,11 @@
 openapi: 3.0.0
 info:
   title: Bank API
-  version: v1.2.0
+  version: v1.1.0
   description: |
     API bancaire sécurisée avec authentification pour la gestion des comptes clients.
 
-    **Nouveautés v1.2.0:**
+    **Nouveautés v1.1.0:**
     - Système d'authentification complet (Admin/Client)
     - Gestion des rôles et permissions
     - Accès sécurisé aux comptes personnels

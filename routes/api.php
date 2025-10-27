@@ -42,7 +42,7 @@ Route::middleware(['throttle:api', 'throttle:1000,1,user', 'throttle:100,1,ip'])
 
     // Comptes
     // Liste des comptes (protégé par authentification)
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware('auth:client')->group(function () {
         Route::get('comptes/non-archives', [CompteController::class, 'nonArchives']);
         Route::get('comptes/archives', [CompteController::class, 'archives'])->middleware('role:admin');
         Route::get('comptes', [CompteController::class, 'index']);
