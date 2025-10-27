@@ -21,6 +21,16 @@ class Kernel extends ConsoleKernel
         $schedule->job(\App\Jobs\SyncBlockedAccountsJob::class)
                  ->hourly()
                  ->description('Synchroniser les statuts de blocage des comptes');
+
+        // Archiver les comptes bloqués dont la date de début de blocage est échue (toutes les heures)
+        $schedule->job(\App\Jobs\ArchiveBlockedAccountsJob::class)
+                 ->hourly()
+                 ->description('Archiver les comptes bloqués expirés');
+
+        // Désarchiver les comptes bloqués dont la date de fin de blocage est échue (toutes les heures)
+        $schedule->job(\App\Jobs\UnarchiveExpiredBlockedAccountsJob::class)
+                 ->hourly()
+                 ->description('Désarchiver les comptes bloqués expirés');
     }
 
     /**

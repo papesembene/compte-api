@@ -1,0 +1,45 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class BloquerCompteRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true; // Les admins peuvent bloquer les comptes
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'date_debut_blocage' => 'nullable|date|after:now',
+            'date_fin_blocage' => 'nullable|date|after:date_debut_blocage',
+            'motif' => 'required|string|max:255',
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'date_debut_blocage.after' => 'La date de début de blocage doit être dans le futur.',
+            'date_fin_blocage.after' => 'La date de fin de blocage doit être après la date de début.',
+            'motif.required' => 'Le motif de blocage est obligatoire.',
+            'motif.max' => 'Le motif ne peut pas dépasser 255 caractères.',
+        ];
+    }
+}

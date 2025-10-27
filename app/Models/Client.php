@@ -7,15 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use Laravel\Passport\HasApiTokens;
 
 /**
  * Modèle représentant un client de la banque.
  *
  * Responsabilité : Gérer les données et relations du client.
  */
-class Client extends Model
+class Client extends Model implements \Illuminate\Contracts\Auth\Authenticatable
 {
-    use HasFactory;
+    use HasFactory, HasApiTokens, \Illuminate\Auth\Authenticatable;
 
     /**
      * Indique que la clé primaire n'est pas auto-incrémentée.

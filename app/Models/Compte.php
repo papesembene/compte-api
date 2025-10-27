@@ -38,6 +38,8 @@ class Compte extends Model
         'type_compte',
         'statut',
         'client_id',
+        'date_debut_blocage',
+        'date_fin_blocage',
     ];
 
     /**

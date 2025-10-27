@@ -38,7 +38,24 @@ class ClientController extends Controller
 
     public function show(Client $client): JsonResponse
     {
+        $user = auth()->user();
+
+        // Vérifier si c'est un admin
+        if (!$this->isAdmin($user)) {
+            return $this->errorResponse('Accès refusé. Réservé aux administrateurs.', 403);
+        }
+
         return $this->successResponse($client, 'Client récupéré avec succès.');
+    }
+
+    /**
+     * Vérifier si l'utilisateur est un admin
+     */
+    private function isAdmin($user): bool
+    {
+        // Pour l'instant, on considère que tous les utilisateurs authentifiés via User sont admins
+        // et ceux via Client sont des clients normaux
+        return $user instanceof \App\Models\User;
     }
 
     public function update(StoreClientRequest $request, Client $client): JsonResponse

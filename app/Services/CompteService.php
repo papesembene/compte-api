@@ -39,7 +39,7 @@ class CompteService
      */
     public function getComptes(array $params): LengthAwarePaginator
     {
-        $query = Compte::with('client')->nonSupprime(); // Utilise le scope pour exclure les supprimés
+        $query = Compte::with('client')->nonSupprime(); 
 
         if (isset($params['type'])) {
             $query->where('type_compte', $params['type']);
@@ -121,11 +121,21 @@ class CompteService
     }
 
     /**
-     * Bloque un compte.
+     * Bloque un compte avec dates optionnelles.
      */
-    public function bloquerCompte(Compte $compte): Compte
+    public function bloquerCompte(Compte $compte, array $data = []): Compte
     {
-        $compte->update(['statut' => 'bloque']);
+        $updateData = ['statut' => 'bloque'];
+
+        if (isset($data['date_debut_blocage'])) {
+            $updateData['date_debut_blocage'] = $data['date_debut_blocage'];
+        }
+
+        if (isset($data['date_fin_blocage'])) {
+            $updateData['date_fin_blocage'] = $data['date_fin_blocage'];
+        }
+
+        $compte->update($updateData);
         return $compte;
     }
 
