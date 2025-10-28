@@ -18,13 +18,12 @@ class ClientFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => Str::uuid(),
             'titulaire' => $this->faker->name(),
             'nci' => $this->faker->unique()->numerify('#############'),
             'email' => $this->faker->unique()->safeEmail(),
             'telephone' => '+221' . $this->faker->randomElement([70, 75, 76, 77, 78]) . $this->faker->numberBetween(1000000, 9999999),
             'adresse' => $this->faker->address() . ', Senegal',
-            'password' => bcrypt('password'), 
+            'password' => bcrypt('password'),
         ];
     }
 }
