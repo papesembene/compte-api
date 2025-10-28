@@ -1,22 +1,20 @@
 #!/bin/sh
 
-# Attendre que la base de données soit prête
-echo "Waiting for database to be ready..."
+# Attendre la DB
+echo "Waiting for database..."
 while ! pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USERNAME; do
-  echo "Database is unavailable - sleeping"
   sleep 1
 done
 
-echo "Database is up - executing migrations"
-php artisan migrate --force
+# Générer les clés Passport si elles n'existent pas
+if [ ! -f storage/oauth-private.key ] || [ ! -f storage/oauth-public.key ]; then
+  echo "Generating Passport keys..."
+  php artisan passport:keys --force
+fi
 
-echo "Seeding database..."
+# Migrer et seed la DB
+php artisan migrate --force
 php artisan db:seed --force
 
-echo "Starting Laravel application..."
+# Lancer l'application
 exec "$@"
-
-
-
-
-
