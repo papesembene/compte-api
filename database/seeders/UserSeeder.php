@@ -14,6 +14,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
+            'id' => \Illuminate\Support\Str::uuid(),
             'name' => 'Admin',
             'email' => 'admin@example.com',
             'password' => Hash::make('password'),
