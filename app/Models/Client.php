@@ -19,19 +19,20 @@ class Client extends Model implements \Illuminate\Contracts\Auth\Authenticatable
     use HasFactory, HasApiTokens, \Illuminate\Auth\Authenticatable;
 
     /**
-     * Indique que la clé primaire est auto-incrémentée.
+     * Indique que la clé primaire n'est pas auto-incrémentée.
      */
-    public $incrementing = true;
+    public $incrementing = false;
 
     /**
-     * Type de la clé primaire : integer.
+     * Type de la clé primaire : string (UUID).
      */
-    protected $keyType = 'int';
+    protected $keyType = 'string';
 
     /**
      * Champs remplissables pour la création/mise à jour.
      */
     protected $fillable = [
+        'id',
         'titulaire',
         'nci',
         'email',
@@ -87,6 +88,10 @@ class Client extends Model implements \Illuminate\Contracts\Auth\Authenticatable
         parent::boot();
 
         static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();
+            }
+
             // Générer password et code si non fournis
             if (empty($model->password)) {
                 $model->password = bcrypt(self::generatePassword());

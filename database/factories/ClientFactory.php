@@ -18,6 +18,7 @@ class ClientFactory extends Factory
     public function definition(): array
     {
         return [
+            'id' => Str::uuid(),
             'titulaire' => $this->faker->name(),
             'nci' => $this->faker->unique()->numerify('#############'),
             'email' => $this->faker->unique()->safeEmail(),

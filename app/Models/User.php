@@ -13,11 +13,22 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
+     * Indique que la clé primaire n'est pas auto-incrémentée.
+     */
+    public $incrementing = false;
+
+    /**
+     * Type de la clé primaire : string (UUID).
+     */
+    protected $keyType = 'string';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
+        'id',
         'name',
         'email',
         'password',
