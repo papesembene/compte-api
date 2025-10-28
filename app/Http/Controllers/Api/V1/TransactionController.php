@@ -74,23 +74,23 @@ class TransactionController extends Controller
     /**
      * Obtenir l'historique des transactions d'un compte.
      */
-    public function historique(Request $request, Compte $compte): JsonResponse
-    {
-        try {
-            $transactions = $this->transactionService->getHistoriqueTransactions($compte, $request->all());
+    // public function historique(Request $request, Compte $compte): JsonResponse
+    // {
+    //     try {
+    //         $transactions = $this->transactionService->getHistoriqueTransactions($compte, $request->all());
 
-            return $this->successResponse(
-                [
-                    'compte' => $compte->load('client'),
-                    'transactions' => $transactions,
-                    'solde_actuel' => $compte->solde,
-                ],
-                'Historique des transactions récupéré avec succès.'
-            );
-        } catch (\Exception $e) {
-            return $this->errorResponse('Erreur lors de la récupération de l\'historique.',  500);
-        }
-    }
+    //         return $this->successResponse(
+    //             [
+    //                 'compte' => $compte->load('client'),
+    //                 'transactions' => $transactions,
+    //                 'solde_actuel' => $compte->solde,
+    //             ],
+    //             'Historique des transactions récupéré avec succès.'
+    //         );
+    //     } catch (\Exception $e) {
+    //         return $this->errorResponse('Erreur lors de la récupération de l\'historique.',  500);
+    //     }
+    // }
 
     /**
      * Obtenir les détails d'une transaction.

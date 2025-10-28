@@ -15,3 +15,8 @@ php artisan db:seed --force
 
 echo "Starting Laravel application..."
 exec "$@"
+
+
+
+
+

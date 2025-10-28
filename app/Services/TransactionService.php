@@ -78,10 +78,10 @@ class TransactionService
     /**
      * Obtenir l'historique des transactions d'un compte.
      */
-    public function getHistoriqueTransactions(Compte $compte, array $params = []): LengthAwarePaginator
-    {
-        return $this->transactionRepository->getHistorique($compte->id, $params);
-    }
+    // public function getHistoriqueTransactions(Compte $compte, array $params = []): LengthAwarePaginator
+    // {
+    //     return $this->transactionRepository->getHistorique($compte->id, $params);
+    // }
 
     /**
      * Obtenir les détails d'une transaction.
