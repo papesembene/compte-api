@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
  *
  * Responsabilité : Archiver automatiquement les comptes bloqués après expiration de leur période de blocage.
  */
-class ArchiveBlockedAccountsJob implements ShouldQueue
+class ArchiveExpiredBlockedAccountsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -33,11 +33,11 @@ class ArchiveBlockedAccountsJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(CloudTransactionRepository $cloudRepository): void
+    public function handle(): void
     {
         Log::info('Démarrage de l\'archivage des comptes bloqués dont la date de début de blocage est échue.');
 
-        DB::transaction(function () use ($cloudRepository) {
+        DB::transaction(function () {
             // Récupérer les comptes bloqués dont la date de début de blocage est échue
             $comptesToArchive = Compte::where('statut', 'bloque')
                 ->whereNotNull('date_debut_blocage')
@@ -45,24 +45,6 @@ class ArchiveBlockedAccountsJob implements ShouldQueue
                 ->get();
 
             foreach ($comptesToArchive as $compte) {
-                // Archiver toutes les transactions du compte vers Neon
-                $transactions = $compte->transactions()->get();
-
-                foreach ($transactions as $transaction) {
-                    $cloudRepository->createTransaction($transaction->toArray());
-                    $transaction->delete(); // Supprimer de la DB locale
-                }
-
-                // Archiver le compte vers Neon
-                $cloudRepository->createTransaction([
-                    'compte_id' => $compte->id,
-                    'type' => 'archivage_compte',
-                    'montant' => 0,
-                    'date_transaction' => now(),
-                    'statut' => 'termine',
-                    'description' => 'Archivage automatique du compte bloqué',
-                ]);
-
                 // Supprimer le compte de la DB locale (soft delete)
                 $compte->delete();
 

@@ -23,118 +23,77 @@ class TransactionService
     }
 
     /**
-     * Effectue un dépôt sur un compte.
+     * Effectuer un dépôt sur un compte.
      */
     public function effectuerDepot(Compte $compte, array $data): Transaction
     {
         return DB::transaction(function () use ($compte, $data) {
+            // Vérifier que le compte n'est pas bloqué
             if ($compte->statut === 'bloque') {
-                throw new \Exception('Impossible d\'effectuer un dépôt sur un compte bloqué');
+                throw new \Exception('Impossible d\'effectuer un dépôt sur un compte bloqué.');
             }
 
-            return $this->transactionRepository->createTransaction([
+            // Créer la transaction
+            $transaction = $this->transactionRepository->createTransaction([
                 'compte_id' => $compte->id,
                 'type' => 'depot',
                 'montant' => $data['montant'],
-                'date_transaction' => now(),
+                'description' => $data['description'] ?? 'Dépôt',
                 'statut' => 'termine',
-                'description' => $data['description'] ?? null,
             ]);
+
+            return $transaction;
         });
     }
 
     /**
-     * Effectue un retrait sur un compte.
+     * Effectuer un retrait sur un compte.
      */
     public function effectuerRetrait(Compte $compte, array $data): Transaction
     {
         return DB::transaction(function () use ($compte, $data) {
+            // Vérifier que le compte n'est pas bloqué
             if ($compte->statut === 'bloque') {
-                throw new \Exception('Impossible d\'effectuer un retrait sur un compte bloqué');
+                throw new \Exception('Impossible d\'effectuer un retrait sur un compte bloqué.');
             }
 
-            $soldeActuel = $compte->solde;
-
-            if ($soldeActuel < $data['montant']) {
-                throw new \Exception('Solde insuffisant pour effectuer ce retrait');
+            // Vérifier le solde
+            if ($compte->solde < $data['montant']) {
+                throw new \Exception('Solde insuffisant pour effectuer ce retrait.');
             }
 
-            return $this->transactionRepository->createTransaction([
+            // Créer la transaction
+            $transaction = $this->transactionRepository->createTransaction([
                 'compte_id' => $compte->id,
                 'type' => 'retrait',
                 'montant' => $data['montant'],
-                'date_transaction' => now(),
+                'description' => $data['description'] ?? 'Retrait',
                 'statut' => 'termine',
-                'description' => $data['description'] ?? null,
             ]);
+
+            return $transaction;
         });
     }
 
     /**
-     * Effectue un virement entre comptes.
-     */
-    public function effectuerVirement(Compte $compteSource, Compte $compteDestination, array $data): array
-    {
-        return DB::transaction(function () use ($compteSource, $compteDestination, $data) {
-            // Vérifier que les comptes ne sont pas bloqués
-            if ($compteSource->statut === 'bloque') {
-                throw new \Exception('Le compte source est bloqué');
-            }
-
-            if ($compteDestination->statut === 'bloque') {
-                throw new \Exception('Le compte destination est bloqué');
-            }
-
-            $soldeSource = $compteSource->solde;
-
-            if ($soldeSource < $data['montant']) {
-                throw new \Exception('Solde insuffisant pour effectuer ce virement');
-            }
-
-            // Créer la transaction de débit
-            $transactionDebit = $this->transactionRepository->createTransaction([
-                'compte_id' => $compteSource->id,
-                'type' => 'retrait',
-                'montant' => $data['montant'],
-                'date_transaction' => now(),
-                'statut' => 'termine',
-                'description' => $data['description'] ?? null,
-            ]);
-
-            // Créer la transaction de crédit
-            $transactionCredit = $this->transactionRepository->createTransaction([
-                'compte_id' => $compteDestination->id,
-                'type' => 'depot',
-                'montant' => $data['montant'],
-                'date_transaction' => now(),
-                'statut' => 'termine',
-                'description' => $data['description'] ?? null,
-            ]);
-
-            return [
-                'transaction_debit' => $transactionDebit,
-                'transaction_credit' => $transactionCredit,
-            ];
-        });
-    }
-
-    /**
-     * Récupère l'historique des transactions d'un compte.
+     * Obtenir l'historique des transactions d'un compte.
      */
     public function getHistoriqueTransactions(Compte $compte, array $params = []): LengthAwarePaginator
     {
-        $query = $compte->transactions()
-            ->with('compte.client')
-            ->orderBy('date_transaction', 'desc');
-
-        return $query->paginate($params['limit'] ?? 20);
+        return $this->transactionRepository->getHistorique($compte->id, $params);
     }
 
     /**
-     * Récupère les détails d'une transaction.
+     * Obtenir les détails d'une transaction.
      */
-    public function getTransactionDetails(string $transactionId): Transaction
+    public function getTransactionDetails(int $transactionId): Transaction
     {
-        return Transaction::with('compte.client')->findOrFail($transactionId);
+        $transaction = Transaction::with('compte.client')->find($transactionId);
+
+        if (!$transaction) {
+            throw new \Exception('Transaction non trouvée.');
+        }
+
+        return $transaction;
     }
 }

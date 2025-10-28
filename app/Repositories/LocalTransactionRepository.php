@@ -111,4 +111,29 @@ class LocalTransactionRepository implements TransactionRepositoryInterface
             ->where('statut', 'termine')
             ->sum(DB::raw("CASE WHEN type = 'depot' THEN montant ELSE -montant END"));
     }
+
+    /**
+     * Récupère l'historique des transactions pour un compte.
+     *
+     * @param int $compteId
+     * @param array $params
+     * @return LengthAwarePaginator
+     */
+    public function getHistorique(int $compteId, array $params): LengthAwarePaginator
+    {
+        $query = Transaction::where('compte_id', $compteId);
+
+        if (isset($params['type'])) {
+            $query->where('type', $params['type']);
+        }
+
+        if (isset($params['statut'])) {
+            $query->where('statut', $params['statut']);
+        }
+
+        $sort = $params['sort'] ?? 'created_at';
+        $order = $params['order'] ?? 'desc';
+
+        return $query->orderBy($sort, $order)->paginate($params['limit'] ?? 10);
+    }
 }

@@ -32,11 +32,11 @@ class UnarchiveExpiredBlockedAccountsJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(CloudTransactionRepository $cloudRepository): void
+    public function handle(): void
     {
         Log::info('Démarrage de la désarchivage des comptes bloqués dont la date de fin de blocage est échue.');
 
-        DB::transaction(function () use ($cloudRepository) {
+        DB::transaction(function () {
             // Récupérer les comptes soft deleted (archivés) dont la date de fin de blocage est échue
             $comptesToUnarchive = Compte::onlyTrashed()
                 ->whereNotNull('date_fin_blocage')
@@ -49,16 +49,6 @@ class UnarchiveExpiredBlockedAccountsJob implements ShouldQueue
 
                 // Restaurer le statut à débloqué
                 $compte->update(['statut' => 'debloque']);
-
-                // Créer une transaction de restauration
-                $cloudRepository->createTransaction([
-                    'compte_id' => $compte->id,
-                    'type' => 'restauration_compte',
-                    'montant' => 0,
-                    'date_transaction' => now(),
-                    'statut' => 'termine',
-                    'description' => 'Restauration automatique du compte après expiration de la période de blocage',
-                ]);
 
                 Log::info("Compte {$compte->id} ({$compte->numero_compte}) restauré automatiquement.");
             }

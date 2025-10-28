@@ -28,16 +28,19 @@ class CompteController extends Controller
     {
         $user = auth()->user();
 
+        $query = Compte::nonSupprime()
+                       ->where('statut', '!=', 'bloque')
+                       ->whereIn('type_compte', ['courant', 'epargne'])
+                       ->with('client')
+                       ->orderBy($request->get('sort', 'created_at'), $request->get('order', 'desc'));
+
         // Vérifier si c'est un admin ou un client
-        if ($this->isAdmin($user)) {
-            // Admin peut voir tous les comptes
-            $comptes = $this->compteService->getComptes($request->all());
-        } else {
+        if (!$this->isAdmin($user)) {
             // Client ne voit que ses propres comptes
-            $params = $request->all();
-            $params['client_id'] = $user->id;
-            $comptes = $this->compteService->getComptes($params);
+            $query->where('client_id', $user->id);
         }
+
+        $comptes = $query->paginate($request->get('limit', 10));
 
         return $this->paginatedResponse($comptes, 'Comptes récupérés avec succès.');
     }
@@ -51,6 +54,11 @@ class CompteController extends Controller
 
     public function show(Compte $compte): JsonResponse
     {
+        // Vérifier si le compte est supprimé ou bloqué
+        if ($compte->trashed() || $compte->statut === 'bloque') {
+            return $this->errorResponse('Compte non trouvé ou inaccessible.', 404);
+        }
+
         $user = auth()->user();
 
         // Vérifier si c'est un admin ou un client
@@ -66,6 +74,11 @@ class CompteController extends Controller
 
     public function update(StoreCompteRequest $request, Compte $compte): JsonResponse
     {
+        // Vérifier si le compte est supprimé ou bloqué
+        if ($compte->trashed() || $compte->statut === 'bloque') {
+            return $this->errorResponse('Impossible de modifier un compte supprimé ou bloqué.', 400);
+        }
+
         $compte = $this->compteService->updateCompte($compte, $request->validated());
 
         return $this->successResponse($compte->load('client'), 'Compte mis à jour avec succès.');
@@ -73,6 +86,11 @@ class CompteController extends Controller
 
     public function destroy(Compte $compte): JsonResponse
     {
+        // Vérifier si le compte est déjà supprimé
+        if ($compte->trashed()) {
+            return $this->errorResponse('Le compte est déjà supprimé.', 400);
+        }
+
         $this->compteService->deleteCompte($compte);
 
         return $this->successResponse(null, 'Compte supprimé avec succès.');
@@ -80,6 +98,16 @@ class CompteController extends Controller
 
     public function bloquer(BloquerCompteRequest $request, Compte $compte): JsonResponse
     {
+        // Vérifier si le compte est supprimé
+        if ($compte->trashed()) {
+            return $this->errorResponse('Impossible de bloquer un compte supprimé.', 400);
+        }
+
+        // Vérifier que seul les comptes épargne peuvent être bloqués
+        if ($compte->type_compte !== 'epargne') {
+            return $this->errorResponse('Seuls les comptes épargne peuvent être bloqués.', 400);
+        }
+
         $compte = $this->compteService->bloquerCompte($compte, $request->validated());
 
         return $this->successResponse($compte->load('client'), 'Compte bloqué avec succès.');
@@ -87,6 +115,16 @@ class CompteController extends Controller
 
     public function debloquer(Compte $compte): JsonResponse
     {
+        // Vérifier si le compte est supprimé
+        if ($compte->trashed()) {
+            return $this->errorResponse('Impossible de débloquer un compte supprimé.', 400);
+        }
+
+        // Vérifier que seul les comptes épargne peuvent être débloqués
+        if ($compte->type_compte !== 'epargne') {
+            return $this->errorResponse('Seuls les comptes épargne peuvent être débloqués.', 400);
+        }
+
         $compte = $this->compteService->debloquerCompte($compte);
 
         return $this->successResponse($compte->load('client'), 'Compte débloqué avec succès.');

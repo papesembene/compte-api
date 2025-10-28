@@ -2,71 +2,53 @@
 
 namespace App\Contracts;
 
-use App\Models\Transaction;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
-
 /**
- * Interface pour le repository des transactions.
+ * Interface pour les repositories de transactions.
  *
  * Définit les méthodes pour gérer les transactions, permettant le découplage
- * et l'extensibilité (Open/Closed principle).
+ * et l'extensibilité (ex. : Local, Cloud, etc.).
  */
 interface TransactionRepositoryInterface
 {
     /**
-     * Récupère une liste paginée de transactions avec options de filtre.
+     * Récupère une liste paginée de transactions avec options de filtre et tri.
      *
      * @param array $params
-     * @return LengthAwarePaginator
+     * @return \Illuminate\Pagination\LengthAwarePaginator
      */
-    public function getTransactions(array $params): LengthAwarePaginator;
+    public function getTransactions(array $params): \Illuminate\Pagination\LengthAwarePaginator;
 
     /**
      * Crée une nouvelle transaction.
      *
      * @param array $data
-     * @return Transaction
+     * @return \App\Models\Transaction
      */
-    public function createTransaction(array $data): Transaction;
+    public function createTransaction(array $data): \App\Models\Transaction;
 
     /**
      * Met à jour une transaction.
      *
-     * @param Transaction $transaction
+     * @param \App\Models\Transaction $transaction
      * @param array $data
-     * @return Transaction
+     * @return \App\Models\Transaction
      */
-    public function updateTransaction(Transaction $transaction, array $data): Transaction;
+    public function updateTransaction(\App\Models\Transaction $transaction, array $data): \App\Models\Transaction;
 
     /**
      * Supprime une transaction.
      *
-     * @param Transaction $transaction
+     * @param \App\Models\Transaction $transaction
      * @return void
      */
-    public function deleteTransaction(Transaction $transaction): void;
+    public function deleteTransaction(\App\Models\Transaction $transaction): void;
 
     /**
-     * Récupère les transactions du jour.
+     * Récupère l'historique des transactions pour un compte.
      *
-     * @return Collection
+     * @param int $compteId
+     * @param array $params
+     * @return \Illuminate\Pagination\LengthAwarePaginator
      */
-    public function getTodayTransactions(): Collection;
-
-    /**
-     * Récupère les transactions par compte.
-     *
-     * @param string $compteId
-     * @return Collection
-     */
-    public function getTransactionsByCompte(string $compteId): Collection;
-
-    /**
-     * Calcule le solde d'un compte basé sur les transactions.
-     *
-     * @param string $compteId
-     * @return float
-     */
-    public function calculateSolde(string $compteId): float;
+    public function getHistorique(int $compteId, array $params): \Illuminate\Pagination\LengthAwarePaginator;
 }

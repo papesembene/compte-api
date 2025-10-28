@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Mail\AuthenticationMail;
 use App\Models\Client;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Service pour l'envoi d'emails.
@@ -21,11 +23,16 @@ class MailService
      */
     public function sendAuthenticationEmail(Client $client, string $password): bool
     {
-        // Simulation d'envoi d'email
-        // En production, utiliser Mail::to($client->email)->send(new AuthenticationMail($password));
+        try {
+            Mail::to($client->email)->send(new AuthenticationMail($client, $password));
 
-        Log::info("Email d'authentification envoyé à {$client->email} avec mot de passe: {$password}");
+            Log::info("Email d'authentification envoyé avec succès à {$client->email}");
 
-        return true;
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Échec de l'envoi de l'email d'authentification à {$client->email}: " . $e->getMessage());
+
+            return false;
+        }
     }
 }

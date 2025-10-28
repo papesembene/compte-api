@@ -48,8 +48,18 @@ class ClientService
             return $client;
         }
 
+        // Générer password et code avant création
+        $plainPassword = Client::generatePassword(); // Stocker en variable séparée
+        $data['password'] = $plainPassword; // Le modèle va hasher automatiquement
+        $data['code'] = Client::generateCode();
+
         // Créer un nouveau client avec password et code générés
-        return Client::create($data);
+        $client = Client::create($data);
+
+        // Attacher le mot de passe en clair pour l'envoi d'email
+        $client->plain_password = $plainPassword;
+
+        return $client;
     }
 
     /**

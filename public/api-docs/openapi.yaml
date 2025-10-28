@@ -1,29 +1,37 @@
 openapi: 3.0.0
 info:
   title: Bank API
-  version: v1.1.0
+  version: v1.2.0
   description: |
-    API bancaire sécurisée avec authentification pour la gestion des comptes clients.
+    API bancaire sécurisée avec authentification complète pour la gestion des comptes clients.
 
-    **Nouveautés v1.1.0:**
-    - Système d'authentification complet (Admin/Client)
-    - Gestion des rôles et permissions
-    - Accès sécurisé aux comptes personnels
-    - **Auto-génération** des numéros de compte et calcul du solde
-    - Architecture SOLID avec injection de dépendances
-    - Gestion d'erreurs et logging améliorés
+    **Nouveautés v1.2.0:**
+    - ✅ **LISTE DES COMPTES** : Filtres avancés, pagination, permissions par rôle
+    - ✅ **DÉTAIL COMPTE** : Sécurité renforcée, vérifications d'accès
+    - ✅ **MISE À JOUR COMPTE** : Validations complètes, service dédié
+    - ✅ **SUPPRESSION COMPTE** : Soft delete implémenté
+    - ✅ **CRÉATION COMPTE** : Client auto-généré, numéros et mots de passe automatiques
+    - ✅ **BLOQUER/DÉBLOQUER** : Comptes épargne uniquement, dates optionnelles
+    - ✅ **ARCHIVAGE AUTOMATIQUE** : Jobs programmés pour archivage/désarchivage
+    - ✅ **AUTHENTIFICATION** : JWT Admin/Client avec rôles et permissions
+    - ✅ **EMAILS** : Gmail SMTP opérationnel pour notifications
+    - ✅ **SMS** : Simulation fiable (Orange API en attente d'approbation)
+    - ✅ **ARCHITECTURE SOLID** : Services, repositories, injection de dépendances
 
-    **Architecture:**
-    - **Sécurisée**: Authentification obligatoire pour tous les accès
-    - **Rôles**: Admin (gestion complète) / Client (accès limité à ses comptes)
-    - **Filtrage automatique**: Les clients ne voient que leurs propres comptes
-    - **Principes SOLID**: Architecture propre avec injection de dépendances
+    **Fonctionnalités validées:**
+    - **Sécurité**: Authentification obligatoire, rôles Admin/Client
+    - **Filtrage automatique**: Clients voient uniquement leurs comptes
+    - **Calculs dynamiques**: Solde = Dépôts - Retraits
+    - **Génération automatique**: Numéros de compte, mots de passe, codes
+    - **Communications**: Emails + SMS simulés opérationnels
+    - **Gestion d'état**: Blocage/déblocage avec dates
+    - **Archivage**: Soft delete + jobs automatiques
 
 servers:
-  - url: http://localhost:8000/api/v1
-    description: Local development server
   - url: https://compte-api.onrender.com/api/v1
     description: Production server on Render
+  - url: http://localhost:8000/api/v1
+    description: Local development server
 
 tags:
   - name: Authentification

@@ -65,41 +65,43 @@ class CompteService
     public function createCompte(array $data): Compte
     {
         return DB::transaction(function () use ($data) {
-            // Extraire les données client
-            $clientData = $data['client'];
-            unset($data['client']);
+            try {
+                // Extraire les données client
+                $clientData = $data['client'];
+                unset($data['client']);
 
-            // Extraire solde_initial si présent
-            $soldeInitial = $data['solde_initial'] ?? 0;
-            unset($data['solde_initial']);
+                // Vérifier ou créer le client
+                $client = $this->clientService->findOrCreateClient($clientData);
 
-            // Vérifier ou créer le client
-            $client = $this->clientService->findOrCreateClient($clientData);
+                // Ajouter client_id au data du compte
+                $data['client_id'] = $client->id;
 
-            // Ajouter client_id au data du compte
-            $data['client_id'] = $client->id;
+                // Créer le compte (le numéro est généré automatiquement dans le boot du modèle)
+                $compte = Compte::create($data);
 
-            // Créer le compte
-            $compte = Compte::create($data);
+                // Le solde est calculé dynamiquement, pas besoin de solde_initial
 
-            // Si solde initial > 0, créer une transaction de dépôt
-            if ($soldeInitial > 0) {
-                $this->transactionRepository->createTransaction([
-                    'compte_id' => $compte->id,
-                    'type' => 'depot',
-                    'montant' => $soldeInitial,
-                    'date_transaction' => now(),
-                    'statut' => 'termine',
+                // Envoyer email avec mot de passe
+                $plainPassword = $client->plain_password ?? \App\Models\Client::generatePassword(); // Utiliser le mot de passe stocké ou en générer un nouveau
+                $mailResult = $this->mailService->sendAuthenticationEmail($client, $plainPassword);
+
+                // Envoyer SMS avec code (ne pas faire échouer la transaction si SMS échoue)
+                try {
+                    $this->smsService->sendAuthenticationSms($client, $client->code);
+                } catch (\Exception $e) {
+                    // Log l'erreur SMS mais ne pas faire échouer la transaction
+                    \Illuminate\Support\Facades\Log::warning('SMS sending failed but transaction continues: ' . $e->getMessage());
+                }
+
+                return $compte->load('client');
+            } catch (\Exception $e) {
+                // Log l'erreur détaillée
+                \Illuminate\Support\Facades\Log::error('Error in createCompte: ' . $e->getMessage(), [
+                    'data' => $data,
+                    'trace' => $e->getTraceAsString()
                 ]);
+                throw $e; // Re-throw pour que la transaction rollback
             }
-
-            // Envoyer email avec mot de passe
-            $this->mailService->sendAuthenticationEmail($client, $client->getOriginal('password'));
-
-            // Envoyer SMS avec code
-            $this->smsService->sendAuthenticationSms($client, $client->code);
-
-            return $compte->load('client');
         });
     }
 

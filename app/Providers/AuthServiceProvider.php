@@ -24,6 +24,11 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
+        // Define Passport scopes
+        Passport::tokensCan([
+            '*' => 'All permissions',
+        ]);
+
         // Passport routes will be registered in RouteServiceProvider
     }
 }
