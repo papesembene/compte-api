@@ -50,6 +50,10 @@ return [
             'transport' => 'ses',
         ],
 
+        'sendgrid' => [
+            'transport' => 'sendgrid',
+        ],
+
         'postmark' => [
             'transport' => 'postmark',
             // 'message_stream_id' => null,
