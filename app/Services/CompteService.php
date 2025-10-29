@@ -153,12 +153,12 @@ class CompteService
                 // Log les informations d'authentification pour le développement
                 \Illuminate\Support\Facades\Log::info("Client créé - Email: {$client->email}, Mot de passe: {$plainPassword}, Code SMS: {$client->code}");
 
-                // Essayer d'envoyer l'email
+                // Envoyer l'email de manière asynchrone via Job
                 try {
-                    $this->mailService->sendAuthenticationEmail($client, $plainPassword);
-                    \Illuminate\Support\Facades\Log::info("Email d'authentification envoyé avec succès à {$client->email}");
+                    $this->mailService->sendAuthenticationEmailAsync($client, $plainPassword);
+                    \Illuminate\Support\Facades\Log::info("Job d'envoi d'email d'authentification dispatché pour {$client->email}");
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::warning("Échec envoi email à {$client->email}: " . $e->getMessage());
+                    \Illuminate\Support\Facades\Log::warning("Échec dispatch du job email à {$client->email}: " . $e->getMessage());
                     // Ne pas faire échouer la transaction pour les emails
                 }
 
