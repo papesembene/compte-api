@@ -57,7 +57,7 @@ trait ApiResponseTrait
         return response()->json([
             'success' => true,
             'message' => $message,
-            'data' => $paginator->items(),
+            'data' => $paginator->getCollection(),
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),

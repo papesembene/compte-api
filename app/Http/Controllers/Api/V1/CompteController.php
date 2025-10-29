@@ -43,7 +43,7 @@ class CompteController extends Controller
 
         $comptes = $query->paginate($request->get('limit', 10));
 
-        return $this->paginatedResponse($comptes->makeHidden(['client']), 'Comptes récupérés avec succès.');
+        return $this->paginatedResponse($comptes, 'Comptes récupérés avec succès.');
     }
 
     public function store(StoreCompteRequest $request): JsonResponse
