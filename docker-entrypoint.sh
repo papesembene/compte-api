@@ -14,6 +14,11 @@ fi
 
 # Migrer et seed la DB
 php artisan migrate --force
+# Créer le personal access client si manquant
+if ! php artisan passport:client --personal --no-interaction --name="Default Personal Access Client" 2>/dev/null; then
+  echo "Personal access client already exists."
+fi
+
 php artisan db:seed --force
 
 # Lancer l'application
