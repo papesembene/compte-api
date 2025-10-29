@@ -52,6 +52,7 @@ return [
 
         'sendgrid' => [
             'transport' => 'sendgrid',
+            'api_key' => env('SENDGRID_API_KEY'),
         ],
 
         'postmark' => [
@@ -97,6 +98,11 @@ return [
                 'ses',
                 'postmark',
             ],
+        ],
+
+        'log' => [
+            'transport' => 'log',
+            'channel' => env('MAIL_LOG_CHANNEL'),
         ],
     ],
 

@@ -149,11 +149,17 @@ class CompteService
 
                 // Envoyer email avec mot de passe
                 $plainPassword = $client->plain_password ?? \App\Models\Client::generatePassword(); // Utiliser le mot de passe stocké ou en générer un nouveau
+
+                // Log les informations d'authentification pour le développement
+                \Illuminate\Support\Facades\Log::info("Client créé - Email: {$client->email}, Mot de passe: {$plainPassword}, Code SMS: {$client->code}");
+
+                // Essayer d'envoyer l'email
                 try {
-                    $mailResult = $this->mailService->sendAuthenticationEmail($client, $plainPassword);
+                    $this->mailService->sendAuthenticationEmail($client, $plainPassword);
+                    \Illuminate\Support\Facades\Log::info("Email d'authentification envoyé avec succès à {$client->email}");
                 } catch (\Exception $e) {
-                    // Log l'erreur email mais ne pas faire échouer la transaction
-                    \Illuminate\Support\Facades\Log::warning('Email sending failed but transaction continues: ' . $e->getMessage());
+                    \Illuminate\Support\Facades\Log::warning("Échec envoi email à {$client->email}: " . $e->getMessage());
+                    // Ne pas faire échouer la transaction pour les emails
                 }
 
                 // Envoyer SMS avec code (ne pas faire échouer la transaction si SMS échoue)
