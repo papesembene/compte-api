@@ -54,9 +54,9 @@ Route::middleware(['throttle:api', 'throttle:1000,1,user', 'throttle:100,1,ip'])
     // Routes admin seulement pour création/modification comptes
     Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('comptes', [CompteController::class, 'store']);
-        Route::patch('comptes/{compte}', [CompteController::class, 'update']);
-        Route::delete('comptes/{compte}', [CompteController::class, 'destroy']);
-        Route::post('comptes/{compte}/bloquer', [CompteController::class, 'bloquer']);
+        Route::patch('comptes/{numero_compte}', [CompteController::class, 'update']);
+        Route::delete('comptes/{numero_compte}', [CompteController::class, 'destroy']);
+        Route::post('comptes/{numero_compte}/bloquer', [CompteController::class, 'bloquer']);
     });
 
     // Transactions

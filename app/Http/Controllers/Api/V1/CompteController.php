@@ -66,8 +66,10 @@ class CompteController extends Controller
         return $this->successResponse($result['data'], $result['message']);
     }
 
-    public function update(StoreCompteRequest $request, Compte $compte): JsonResponse
+    public function update(StoreCompteRequest $request, string $numero_compte): JsonResponse
     {
+        $compte = Compte::where('numero_compte', $numero_compte)->firstOrFail();
+
         // Vérifier si le compte est supprimé ou bloqué
         if ($compte->trashed() || $compte->statut === 'bloque') {
             return $this->errorResponse('Impossible de modifier un compte supprimé ou bloqué.', 400);
@@ -78,8 +80,10 @@ class CompteController extends Controller
         return $this->successResponse($compte, 'Compte mis à jour avec succès.');
     }
 
-    public function destroy(Compte $compte): JsonResponse
+    public function destroy(string $numero_compte): JsonResponse
     {
+        $compte = Compte::where('numero_compte', $numero_compte)->firstOrFail();
+
         $result = $this->compteService->deleteCompte($compte);
 
         if (isset($result['error'])) {
@@ -89,8 +93,10 @@ class CompteController extends Controller
         return $this->successResponse(null, $result['message']);
     }
 
-    public function bloquer(BloquerCompteRequest $request, Compte $compte): JsonResponse
+    public function bloquer(BloquerCompteRequest $request, string $numero_compte): JsonResponse
     {
+        $compte = Compte::where('numero_compte', $numero_compte)->firstOrFail();
+
         // Vérifier si le compte est supprimé
         if ($compte->trashed()) {
             return $this->errorResponse('Impossible de bloquer un compte supprimé.', 400);
