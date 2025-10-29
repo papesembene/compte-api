@@ -17,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Enregistrer le binding pour SmsService avec injection de dépendance
-        $this->app->bind(\App\Contracts\SmsNotifierInterface::class, \App\Services\TwilioSmsNotifier::class);
+        $this->app->bind(\App\Contracts\SmsNotifierInterface::class, \App\Services\OrangeSmsNotifier::class);
     }
 
     /**
