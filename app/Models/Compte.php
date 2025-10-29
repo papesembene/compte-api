@@ -81,30 +81,6 @@ class Compte extends Model
             ->sum(DB::raw("CASE WHEN type = 'depot' THEN montant ELSE -montant END"));
     }
 
-    /**
-     * Scope pour les comptes actifs (non soft deleted).
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeActif($query)
-    {
-        return $query->where('statut', 'debloque');
-    }
-
-    /**
-     * Scope pour filtrer par téléphone du client.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $telephone
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeClient($query, $telephone)
-    {
-        return $query->whereHas('client', function ($q) use ($telephone) {
-            $q->where('telephone', $telephone);
-        });
-    }
 
     /**
      * Scope global pour récupérer les comptes non supprimés (non soft deleted).
@@ -129,19 +105,6 @@ class Compte extends Model
         return $query->where('numero_compte', $numero);
     }
 
-    /**
-     * Scope local pour récupérer les comptes d'un client par téléphone.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $telephone
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeParClient($query, $telephone)
-    {
-        return $query->whereHas('client', function ($q) use ($telephone) {
-            $q->where('telephone', $telephone);
-        });
-    }
 
     /**
      * Boot the model.

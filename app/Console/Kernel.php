@@ -13,24 +13,16 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // Archiver les transactions vers Neon quotidiennement à minuit
-        $schedule->job(\App\Jobs\ArchiveDailyTransactionsJob::class)
-                 ->dailyAt('00:00')
-                 ->description('Archiver les transactions vers Neon');
-
-        // Synchroniser les statuts de blocage des comptes toutes les heures
-        $schedule->job(\App\Jobs\SyncBlockedAccountsJob::class)
+   
+        // Bloquer automatiquement les comptes dont la date de début de blocage est atteinte (toutes les heures)
+        $schedule->job(\App\Jobs\ArchiveExpiredBlockedAccountsJob::class)
                  ->hourly()
-                 ->description('Synchroniser les statuts de blocage des comptes');
+                 ->description('Bloquer automatiquement les comptes à la date programmée');
 
-        // Archiver les comptes bloqués dont la date de début de blocage est échue (toutes les heures)
-        $schedule->job(\App\Jobs\ArchiveBlockedAccountsJob::class)
-                 ->hourly()
-                 ->description('Archiver les comptes bloqués expirés');
-
-        // Désarchiver les comptes bloqués dont la date de fin de blocage est échue (toutes les heures)
+        // Débloquer automatiquement les comptes dont la date de fin de blocage est atteinte (toutes les heures)
         $schedule->job(\App\Jobs\UnarchiveExpiredBlockedAccountsJob::class)
                  ->hourly()
-                 ->description('Désarchiver les comptes bloqués expirés');
+                 ->description('Débloquer automatiquement les comptes expirés');
     }
 
     /**

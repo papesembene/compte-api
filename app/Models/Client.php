@@ -61,6 +61,19 @@ class Client extends Model implements \Illuminate\Contracts\Auth\Authenticatable
     }
 
     /**
+     * Scope pour trouver un client par NCI ou téléphone.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $identifier
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeFindByIdentifier($query, $identifier)
+    {
+        return $query->where('nci', $identifier)
+                    ->orWhere('telephone', $identifier);
+    }
+
+    /**
      * Génère un mot de passe aléatoire.
      *
      * @return string

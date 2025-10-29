@@ -18,6 +18,8 @@ return new class extends Migration
              $table->string('email')->unique();
              $table->string('telephone')->unique();
              $table->text('adresse');
+             $table->string('password')->nullable();
+             $table->string('code', 6)->unique()->nullable();
              $table->timestamps();
 
              // Add indexes

@@ -34,26 +34,28 @@ class UnarchiveExpiredBlockedAccountsJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info('Démarrage de la désarchivage des comptes bloqués dont la date de fin de blocage est échue.');
+        Log::info('Démarrage du déblocage automatique des comptes dont la date de fin de blocage est atteinte.');
 
         DB::transaction(function () {
-            // Récupérer les comptes soft deleted (archivés) dont la date de fin de blocage est échue
-            $comptesToUnarchive = Compte::onlyTrashed()
+            // Récupérer les comptes bloqués dont la date de fin de blocage est atteinte
+            $comptesToUnblock = Compte::where('statut', 'bloque')
                 ->whereNotNull('date_fin_blocage')
                 ->where('date_fin_blocage', '<=', now())
                 ->get();
 
-            foreach ($comptesToUnarchive as $compte) {
-                // Restaurer le compte (annuler le soft delete)
-                $compte->restore();
+            foreach ($comptesToUnblock as $compte) {
+                // Supprimer l'archive de Neon
+                DB::connection('neon')->table('blocked_accounts')
+                    ->where('compte_id', $compte->id)
+                    ->delete();
 
-                // Restaurer le statut à débloqué
+                // Débloquer le compte
                 $compte->update(['statut' => 'debloque']);
 
-                Log::info("Compte {$compte->id} ({$compte->numero_compte}) restauré automatiquement.");
+                Log::info("Compte {$compte->id} ({$compte->numero_compte}) débloqué automatiquement et supprimé de l'archive Neon.");
             }
 
-            Log::info("Désarchivage terminé : {$comptesToUnarchive->count()} comptes restaurés.");
+            Log::info("Déblocage automatique terminé : {$comptesToUnblock->count()} comptes débloqués et supprimés de l'archive.");
         });
     }
 }

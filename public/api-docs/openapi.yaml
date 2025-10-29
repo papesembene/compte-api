@@ -1,18 +1,19 @@
 openapi: 3.0.0
 info:
   title: Bank API
-  version: v1.2.0
+  version: v1.3.0
   description: |
     API bancaire sécurisée avec authentification complète pour la gestion des comptes clients.
 
-    **Nouveautés v1.2.0:**
+    **Nouveautés v1.3.0:**
     - ✅ **LISTE DES COMPTES** : Filtres avancés, pagination, permissions par rôle
-    - ✅ **DÉTAIL COMPTE** : Sécurité renforcée, vérifications d'accès
+    - ✅ **DÉTAIL COMPTE** : Sécurité renforcée, vérifications d'accès par numéro
     - ✅ **MISE À JOUR COMPTE** : Validations complètes, service dédié
     - ✅ **SUPPRESSION COMPTE** : Soft delete implémenté
     - ✅ **CRÉATION COMPTE** : Client auto-généré, numéros et mots de passe automatiques
-    - ✅ **BLOQUER/DÉBLOQUER** : Comptes épargne uniquement, dates optionnelles
-    - ✅ **ARCHIVAGE AUTOMATIQUE** : Jobs programmés pour archivage/désarchivage
+    - ✅ **BLOCAGE PROGRAMMÉ** : Comptes épargne uniquement, dates obligatoires, archivage automatique
+    - ✅ **DÉBLOCAGE AUTOMATIQUE** : Jobs programmés selon dates de fin
+    - ✅ **ARCHIVAGE NEON** : Base de données séparée pour archivage permanent
     - ✅ **AUTHENTIFICATION** : JWT Admin/Client avec rôles et permissions
     - ✅ **EMAILS** : Gmail SMTP opérationnel pour notifications
     - ✅ **SMS** : Simulation fiable (Orange API en attente d'approbation)
@@ -24,8 +25,8 @@ info:
     - **Calculs dynamiques**: Solde = Dépôts - Retraits
     - **Génération automatique**: Numéros de compte, mots de passe, codes
     - **Communications**: Emails + SMS simulés opérationnels
-    - **Gestion d'état**: Blocage/déblocage avec dates
-    - **Archivage**: Soft delete + jobs automatiques
+    - **Blocage intelligent**: Programmation avec archivage/désarchivage automatique
+    - **Archivage permanent**: Base Neon pour historique complet
 
 servers:
   - url: https://compte-api.onrender.com/api/v1
@@ -414,168 +415,33 @@ paths:
         '422':
           description: Erreurs de validation
 
-  /comptes/archives:
-    get:
-      summary: Lister les comptes archivés
-      description: Récupère une liste paginée des comptes archivés (soft deleted) (Admin uniquement).
-      tags:
-        - Comptes
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: page
-          in: query
-          description: Numéro de page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          description: Nombre d'éléments par page
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-        - name: sort
-          in: query
-          description: Champ de tri
-          schema:
-            type: string
-            enum: [id, numero_compte, solde, created_at]
-            default: created_at
-        - name: order
-          in: query
-          description: Ordre de tri
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: desc
-      responses:
-        '200':
-          description: Liste des comptes archivés
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Compte'
-                  currentPage:
-                    type: integer
-                    example: 1
-                  totalPages:
-                    type: integer
-                    example: 5
-                  totalItems:
-                    type: integer
-                    example: 50
-                  message:
-                    type: string
-                    example: Comptes archivés récupérés avec succès.
-        '403':
-          description: Accès refusé (réservé aux admins)
-        '400':
-          description: Paramètres invalides
-        '401':
-          description: Non autorisé
 
-  /comptes/non-archives:
-    get:
-      summary: Lister les comptes actifs
-      description: |
-        Récupère une liste paginée des comptes actifs (non supprimés).
-
-        **Rôles:**
-        - **Admin**: Voit tous les comptes actifs du système
-        - **Client**: Voit uniquement ses propres comptes actifs
-      tags:
-        - Comptes
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: page
-          in: query
-          description: Numéro de page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          description: Nombre d'éléments par page
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-        - name: sort
-          in: query
-          description: Champ de tri
-          schema:
-            type: string
-            enum: [id, numero_compte, solde, created_at]
-            default: created_at
-        - name: order
-          in: query
-          description: Ordre de tri
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: desc
-      responses:
-        '200':
-          description: Liste des comptes actifs
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Compte'
-                  currentPage:
-                    type: integer
-                    example: 1
-                  totalPages:
-                    type: integer
-                    example: 5
-                  totalItems:
-                    type: integer
-                    example: 50
-                  message:
-                    type: string
-                    example: Comptes actifs récupérés avec succès.
-        '400':
-          description: Paramètres invalides
-        '401':
-          description: Non autorisé
-
-  /comptes/{id}:
+  /comptes/{numero_compte}:
     get:
       summary: Récupérer un compte spécifique
       description: |
-        Récupère les détails d'un compte par son ID.
+        Récupère les détails d'un compte par son numéro (10 chiffres).
 
         **Rôles:**
         - **Admin**: Peut voir n'importe quel compte
         - **Client**: Peut uniquement voir ses propres comptes
+
+        **Comptes épargne bloqués:**
+        - Si le compte est archivé dans Neon, les données sont récupérées depuis la base d'archivage
+        - Les dates de début et fin de blocage sont affichées uniquement pour les comptes épargne
       tags:
         - Comptes
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: numero_compte
           in: path
           required: true
-          description: ID du compte
+          description: Numéro du compte (10 chiffres)
           schema:
             type: string
-            format: uuid
+            pattern: '^\d{10}$'
+            example: "1234567890"
       responses:
         '200':
           description: Détails du compte
@@ -584,15 +450,67 @@ paths:
               schema:
                 type: object
                 properties:
-                  data:
-                    $ref: '#/components/schemas/Compte'
+                  $ref: '#/components/schemas/Compte'
                   message:
                     type: string
-                    example: Compte récupéré avec succès.
+                    example: Détails du compte récupérés avec succès.
+              examples:
+                compte_courant_actif:
+                  summary: Compte courant actif
+                  value:
+                    data:
+                      id: "550e8400-e29b-41d4-a716-446655440000"
+                      numero_compte: "1234567890"
+                      solde: 1500.50
+                      type_compte: "courant"
+                      statut: "debloque"
+                      client_id: "550e8400-e29b-41d4-a716-446655440001"
+                      client:
+                        id: "550e8400-e29b-41d4-a716-446655440001"
+                        titulaire: "John Doe"
+                        email: "john.doe@example.com"
+                      created_at: "2025-10-25T18:00:00.000000Z"
+                    message: Détails du compte récupérés avec succès.
+                compte_epargne_bloque:
+                  summary: Compte épargne bloqué (avec dates)
+                  value:
+                    data:
+                      id: "550e8400-e29b-41d4-a716-446655440002"
+                      numero_compte: "0987654321"
+                      solde: 5000.00
+                      type_compte: "epargne"
+                      statut: "bloque"
+                      date_debut_blocage: "2025-10-30T10:00:00Z"
+                      date_fin_blocage: "2025-11-30T10:00:00Z"
+                      client_id: "550e8400-e29b-41d4-a716-446655440003"
+                      client:
+                        id: "550e8400-e29b-41d4-a716-446655440003"
+                        titulaire: "Jane Smith"
+                        email: "jane.smith@example.com"
+                      created_at: "2025-10-25T18:00:00.000000Z"
+                    message: Détails du compte récupérés avec succès.
+                compte_epargne_archive:
+                  summary: Compte épargne archivé (depuis Neon)
+                  value:
+                    data:
+                      id: "550e8400-e29b-41d4-a716-446655440004"
+                      numero_compte: "1122334455"
+                      solde: 10000.00
+                      type_compte: "epargne"
+                      statut: "bloque"
+                      date_debut_blocage: "2025-09-01T00:00:00Z"
+                      date_fin_blocage: "2025-09-30T23:59:59Z"
+                      client_id: "550e8400-e29b-41d4-a716-446655440005"
+                      client:
+                        id: "550e8400-e29b-41d4-a716-446655440005"
+                        titulaire: "Bob Wilson"
+                        email: "bob.wilson@example.com"
+                      created_at: "2025-08-15T10:00:00.000000Z"
+                    message: Détails du compte archivé récupérés avec succès.
         '403':
           description: Accès refusé (compte ne vous appartient pas)
         '404':
-          description: Compte non trouvé
+          description: Compte non trouvé ou inaccessible
         '401':
           description: Non autorisé
     patch:
@@ -603,13 +521,14 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: numero_compte
           in: path
           required: true
-          description: ID du compte
+          description: Numéro du compte (10 chiffres)
           schema:
             type: string
-            format: uuid
+            pattern: '^\d{10}$'
+            example: "1234567890"
       requestBody:
         required: true
         content:
@@ -639,19 +558,26 @@ paths:
           description: Erreurs de validation
     delete:
       summary: Supprimer un compte (soft delete)
-      description: Effectue une suppression logique du compte (Admin uniquement).
+      description: |
+        Effectue une suppression logique du compte (Admin uniquement).
+
+        **Conditions de suppression:**
+        - Le compte doit être actif (non bloqué)
+        - Le compte ne doit pas déjà être supprimé
+        - Seuls les comptes courants et épargne actifs peuvent être supprimés
       tags:
         - Comptes
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: numero_compte
           in: path
           required: true
-          description: ID du compte
+          description: Numéro du compte (10 chiffres)
           schema:
             type: string
-            format: uuid
+            pattern: '^\d{10}$'
+            example: "1234567890"
       responses:
         '200':
           description: Compte supprimé
@@ -663,6 +589,21 @@ paths:
                   message:
                     type: string
                     example: Compte supprimé avec succès.
+        '400':
+          description: Erreurs de validation ou compte non supprimable
+          content:
+            application/json:
+              examples:
+                compte_bloque:
+                  summary: Tentative de suppression d'un compte bloqué
+                  value:
+                    success: false
+                    message: "Impossible de supprimer un compte bloqué."
+                compte_deja_supprime:
+                  summary: Compte déjà supprimé
+                  value:
+                    success: false
+                    message: "Le compte est déjà supprimé."
         '403':
           description: Accès refusé (réservé aux admins)
         '404':
@@ -670,35 +611,117 @@ paths:
         '401':
           description: Non autorisé
 
-  /comptes/{id}/bloquer:
+  /comptes/{numero_compte}/bloquer:
     post:
-      summary: Bloquer un compte
-      description: Bloque un compte pour empêcher les transactions (Admin uniquement).
+      summary: Bloquer un compte épargne
+      description: |
+        Bloque un compte épargne avec dates de blocage programmées (Admin uniquement).
+
+        **Fonctionnalités automatisées:**
+        - **Blocage immédiat** si date_debut ≤ maintenant
+        - **Blocage programmé** via Job si date_debut > maintenant
+        - **Archivage automatique** dans Neon à la date de début
+        - **Désarchivage automatique** à la date de fin
+        - **Seuls les comptes épargne** peuvent être bloqués
+
+        **Note:** Le déblocage se fait automatiquement selon les dates programmées.
       tags:
         - Comptes
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: numero_compte
           in: path
           required: true
-          description: ID du compte
+          description: Numéro du compte (10 chiffres)
           schema:
             type: string
-            format: uuid
+            pattern: '^\d{10}$'
+            example: "1234567890"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - date_debut_blocage
+                - date_fin_blocage
+                - motif
+              properties:
+                date_debut_blocage:
+                  type: string
+                  format: date-time
+                  description: Date de début du blocage
+                  example: "2025-10-30T10:00:00Z"
+                date_fin_blocage:
+                  type: string
+                  format: date-time
+                  description: Date de fin du blocage (doit être après date_debut)
+                  example: "2025-11-30T10:00:00Z"
+                motif:
+                  type: string
+                  description: Motif du blocage
+                  example: "Blocage pour maintenance programmée"
+            examples:
+              blocage_immediat:
+                summary: Blocage immédiat
+                description: Le compte sera bloqué immédiatement et archivé
+                value:
+                  date_debut_blocage: "2025-10-29T12:00:00Z"
+                  date_fin_blocage: "2025-11-29T12:00:00Z"
+                  motif: "Blocage immédiat pour maintenance"
+              blocage_programme:
+                summary: Blocage programmé
+                description: Le compte sera bloqué automatiquement à la date spécifiée
+                value:
+                  date_debut_blocage: "2025-12-01T00:00:00Z"
+                  date_fin_blocage: "2025-12-31T23:59:59Z"
+                  motif: "Blocage annuel programmé"
       responses:
         '200':
-          description: Compte bloqué
+          description: Compte bloqué avec succès
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data:
-                    $ref: '#/components/schemas/Compte'
+                    allOf:
+                      - $ref: '#/components/schemas/Compte'
+                      - type: object
+                        properties:
+                          date_debut_blocage:
+                            type: string
+                            format: date-time
+                            example: "2025-10-30T10:00:00Z"
+                          date_fin_blocage:
+                            type: string
+                            format: date-time
+                            example: "2025-11-30T10:00:00Z"
                   message:
                     type: string
                     example: Compte bloqué avec succès.
+        '400':
+          description: Erreurs de validation ou compte non éligible
+          content:
+            application/json:
+              examples:
+                compte_courant:
+                  summary: Tentative de blocage d'un compte courant
+                  value:
+                    success: false
+                    message: "Seuls les comptes épargne peuvent être bloqués."
+                compte_deja_bloque:
+                  summary: Compte déjà bloqué
+                  value:
+                    success: false
+                    message: "Ce compte est déjà bloqué."
+                dates_invalides:
+                  summary: Dates invalides
+                  value:
+                    success: false
+                    message: "La date de fin doit être postérieure à la date de début."
         '403':
           description: Accès refusé (réservé aux admins)
         '404':
@@ -706,41 +729,6 @@ paths:
         '401':
           description: Non autorisé
 
-  /comptes/{id}/debloquer:
-    post:
-      summary: Débloquer un compte
-      description: Débloque un compte pour permettre les transactions (Admin uniquement).
-      tags:
-        - Comptes
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID du compte
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Compte débloqué
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/Compte'
-                  message:
-                    type: string
-                    example: Compte débloqué avec succès.
-        '403':
-          description: Accès refusé (réservé aux admins)
-        '404':
-          description: Compte non trouvé
-        '401':
-          description: Non autorisé
 
 components:
   securitySchemes:
@@ -813,9 +801,16 @@ components:
           format: uuid
           description: ID du client propriétaire
           example: "550e8400-e29b-41d4-a716-446655440000"
-        client:
-          $ref: '#/components/schemas/Client'
-          description: Informations complètes du client (inclus dans toutes les réponses)
+        date_debut_blocage:
+          type: string
+          format: date-time
+          description: "Date de début du blocage (comptes épargne uniquement)"
+          example: "2025-10-30T10:00:00Z"
+        date_fin_blocage:
+          type: string
+          format: date-time
+          description: "Date de fin du blocage (comptes épargne uniquement)"
+          example: "2025-11-30T10:00:00Z"
         created_at:
           type: string
           format: date-time

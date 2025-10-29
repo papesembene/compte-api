@@ -39,7 +39,7 @@ class CompteService
      */
     public function getComptes(array $params): LengthAwarePaginator
     {
-        $query = Compte::with('client')->nonSupprime(); 
+        $query = Compte::nonSupprime();
 
         if (isset($params['type'])) {
             $query->where('type_compte', $params['type']);
@@ -57,6 +57,72 @@ class CompteService
         $order = $params['order'] ?? 'desc';
 
         return $query->orderBy($sort, $order)->paginate($params['limit'] ?? 10);
+    }
+
+    /**
+     * Récupère les détails d'un compte spécifique avec gestion des comptes archivés.
+     */
+    public function getCompteDetails(string $numero_compte, $user)
+    {
+        // Trouver le compte par numéro
+        $compte = Compte::numero($numero_compte)->nonSupprime()->first();
+
+        if (!$compte) {
+            return ['error' => 'Compte non trouvé.', 'code' => 404];
+        }
+
+        // Vérifier si le compte est bloqué
+        if ($compte->statut === 'bloque') {
+            // Si c'est un compte épargne bloqué, vérifier s'il est archivé dans Neon
+            if ($compte->type_compte === 'epargne') {
+                $archivedData = DB::connection('neon')
+                    ->table('blocked_accounts')
+                    ->where('numero_compte', $numero_compte)
+                    ->first();
+
+                if ($archivedData) {
+                    // Retourner les données archivées
+                    $compteData = json_decode($archivedData->compte_data, true);
+                    $clientData = json_decode($archivedData->client_data, true);
+
+                    // Ajouter les dates de blocage
+                    $compteData['date_debut_blocage'] = $archivedData->date_debut_blocage;
+                    $compteData['date_fin_blocage'] = $archivedData->date_fin_blocage;
+                    $compteData['client'] = $clientData;
+
+                    return ['data' => $compteData, 'message' => 'Détails du compte archivé récupérés avec succès.'];
+                }
+            }
+
+            return ['error' => 'Compte non trouvé ou inaccessible.', 'code' => 404];
+        }
+
+        // Vérifier les permissions
+        if (!$this->isAdmin($user)) {
+            // Client ne peut voir que ses propres comptes
+            if ($compte->client_id !== $user->id) {
+                return ['error' => 'Accès refusé. Vous ne pouvez voir que vos propres comptes.', 'code' => 403];
+            }
+        }
+
+        // Pour les comptes épargne, ajouter les dates de blocage si elles existent
+        $responseData = $compte;
+        if ($compte->type_compte === 'epargne' && ($compte->date_debut_blocage || $compte->date_fin_blocage)) {
+            $responseData->date_debut_blocage = $compte->date_debut_blocage;
+            $responseData->date_fin_blocage = $compte->date_fin_blocage;
+        }
+
+        return ['data' => $responseData, 'message' => 'Détails du compte récupérés avec succès.'];
+    }
+
+    /**
+     * Vérifier si l'utilisateur est un admin
+     */
+    private function isAdmin($user): bool
+    {
+        // Pour l'instant, on considère que tous les utilisateurs authentifiés via User sont admins
+        // et ceux via Client sont des clients normaux
+        return $user instanceof \App\Models\User;
     }
 
     /**
@@ -115,11 +181,23 @@ class CompteService
     }
 
     /**
-     * Supprime un compte (soft delete).
+     * Supprime un compte (soft delete) - seulement si actif.
      */
-    public function deleteCompte(Compte $compte): void
+    public function deleteCompte(Compte $compte): array
     {
+        // Vérifier si le compte est déjà supprimé
+        if ($compte->trashed()) {
+            return ['error' => 'Le compte est déjà supprimé.', 'code' => 400];
+        }
+
+        // Vérifier si le compte est bloqué
+        if ($compte->statut === 'bloque') {
+            return ['error' => 'Impossible de supprimer un compte bloqué.', 'code' => 400];
+        }
+
         $compte->delete();
+
+        return ['success' => true, 'message' => 'Compte supprimé avec succès.'];
     }
 
     /**
@@ -141,12 +219,4 @@ class CompteService
         return $compte;
     }
 
-    /**
-     * Débloque un compte.
-     */
-    public function debloquerCompte(Compte $compte): Compte
-    {
-        $compte->update(['statut' => 'debloque']);
-        return $compte;
-    }
 }

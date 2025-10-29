@@ -24,6 +24,13 @@ class ClientController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $user = auth()->user();
+
+        // Vérifier si c'est un admin
+        if (!$this->isAdmin($user)) {
+            return $this->errorResponse('Accès refusé. Réservé aux administrateurs.', 403);
+        }
+
         $clients = $this->clientService->getClients($request->all());
 
         return $this->paginatedResponse($clients, 'Clients récupérés avec succès.');
@@ -36,16 +43,23 @@ class ClientController extends Controller
         return $this->successResponse($client, 'Client créé avec succès.', 201);
     }
 
-    public function show(Client $client): JsonResponse
+    public function show(string $identifier): JsonResponse
     {
         $user = auth()->user();
+
+        // Trouver le client par NCI ou téléphone
+        $client = Client::findByIdentifier($identifier)->first();
+
+        if (!$client) {
+            return $this->errorResponse('Client non trouvé.', 404);
+        }
 
         // Vérifier si c'est un admin
         if (!$this->isAdmin($user)) {
             return $this->errorResponse('Accès refusé. Réservé aux administrateurs.', 403);
         }
 
-        return $this->successResponse($client, 'Client récupéré avec succès.');
+        return $this->successResponse($client->load('comptes'), 'Client récupéré avec succès.');
     }
 
     /**
