@@ -46,7 +46,7 @@ Route::middleware(['throttle:api', 'throttle:1000,1,user', 'throttle:100,1,ip'])
 
     // Comptes
     // Liste des comptes (protégé par authentification)
-    Route::middleware('auth:client')->group(function () {
+    Route::middleware('auth:api')->group(function () {
         Route::get('comptes', [CompteController::class, 'index']);
         Route::get('comptes/{numero_compte}', [CompteController::class, 'show']);
     });
