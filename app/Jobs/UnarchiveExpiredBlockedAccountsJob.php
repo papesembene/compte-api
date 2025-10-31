@@ -43,19 +43,35 @@ class UnarchiveExpiredBlockedAccountsJob implements ShouldQueue
                 ->where('date_fin_blocage', '<=', now())
                 ->get();
 
+            Log::info("Nombre de comptes trouvés pour déblocage : {$comptesToUnblock->count()}");
+
             foreach ($comptesToUnblock as $compte) {
-                // Supprimer l'archive de Neon
-                DB::connection('neon')->table('blocked_accounts')
-                    ->where('compte_id', $compte->id)
-                    ->delete();
+                Log::info("Traitement du compte {$compte->numero_compte} - Type: {$compte->type_compte} - Statut: {$compte->statut} - Date fin: {$compte->date_fin_blocage}");
 
-                // Débloquer le compte
-                $compte->update(['statut' => 'debloque']);
+                // Vérifier que c'est un compte épargne
+                if ($compte->type_compte !== 'epargne') {
+                    Log::warning("Tentative de déblocage automatique d'un compte non-épargne: {$compte->numero_compte}");
+                    continue;
+                }
 
-                Log::info("Compte {$compte->id} ({$compte->numero_compte}) débloqué automatiquement et supprimé de l'archive Neon.");
+                try {
+                    // Supprimer l'archive de Neon
+                    $deleted = DB::connection('neon')->table('blocked_accounts')
+                        ->where('compte_id', $compte->id)
+                        ->delete();
+
+                    Log::info("Suppression de l'archive Neon pour le compte {$compte->numero_compte}: {$deleted} enregistrement(s) supprimé(s)");
+
+                    // Débloquer le compte
+                    $compte->update(['statut' => 'debloque']);
+
+                    Log::info("✅ Compte {$compte->id} ({$compte->numero_compte}) débloqué automatiquement.");
+                } catch (\Exception $e) {
+                    Log::error("❌ Erreur lors du déblocage du compte {$compte->numero_compte}: " . $e->getMessage());
+                }
             }
 
-            Log::info("Déblocage automatique terminé : {$comptesToUnblock->count()} comptes débloqués et supprimés de l'archive.");
+            Log::info("Déblocage automatique terminé : {$comptesToUnblock->count()} comptes traités.");
         });
     }
 }

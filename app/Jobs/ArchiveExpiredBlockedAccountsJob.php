@@ -44,29 +44,43 @@ class ArchiveExpiredBlockedAccountsJob implements ShouldQueue
                 ->where('date_debut_blocage', '<=', now())
                 ->get();
 
-            foreach ($comptesToBlock as $compte) {
-                // Archiver le compte dans Neon avant de le bloquer
-                DB::connection('neon')->table('blocked_accounts')->insert([
-                    'id' => (string) \Illuminate\Support\Str::uuid(),
-                    'compte_id' => $compte->id,
-                    'numero_compte' => $compte->numero_compte,
-                    'type_compte' => $compte->type_compte,
-                    'client_id' => $compte->client_id,
-                    'date_debut_blocage' => $compte->date_debut_blocage,
-                    'date_fin_blocage' => $compte->date_fin_blocage,
-                    'motif' => 'Blocage automatique programmé',
-                    'compte_data' => json_encode($compte->toArray()),
-                    'client_data' => json_encode($compte->client->toArray()),
-                    'archived_at' => now(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            Log::info("Nombre de comptes trouvés pour blocage : {$comptesToBlock->count()}");
 
-                $compte->update(['statut' => 'bloque']);
-                Log::info("Compte {$compte->id} ({$compte->numero_compte}) bloqué automatiquement et archivé dans Neon.");
+            foreach ($comptesToBlock as $compte) {
+                Log::info("Traitement du compte {$compte->numero_compte} - Type: {$compte->type_compte} - Statut: {$compte->statut} - Date debut: {$compte->date_debut_blocage}");
+
+                // Vérifier que c'est un compte épargne
+                if ($compte->type_compte !== 'epargne') {
+                    Log::warning("Tentative de blocage automatique d'un compte non-épargne: {$compte->numero_compte}");
+                    continue;
+                }
+
+                try {
+                    // Archiver le compte dans Neon avant de le bloquer
+                    DB::connection('neon')->table('blocked_accounts')->insert([
+                        'id' => (string) \Illuminate\Support\Str::uuid(),
+                        'compte_id' => $compte->id,
+                        'numero_compte' => $compte->numero_compte,
+                        'type_compte' => $compte->type_compte,
+                        'client_id' => $compte->client_id,
+                        'date_debut_blocage' => $compte->date_debut_blocage,
+                        'date_fin_blocage' => $compte->date_fin_blocage,
+                        'motif' => 'Blocage automatique programmé',
+                        'compte_data' => json_encode($compte->toArray()),
+                        'client_data' => json_encode($compte->client->toArray()),
+                        'archived_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    $compte->update(['statut' => 'bloque']);
+                    Log::info("✅ Compte {$compte->id} ({$compte->numero_compte}) bloqué automatiquement et archivé dans Neon.");
+                } catch (\Exception $e) {
+                    Log::error("❌ Erreur lors du blocage du compte {$compte->numero_compte}: " . $e->getMessage());
+                }
             }
 
-            Log::info("Blocage programmé terminé : {$comptesToBlock->count()} comptes bloqués et archivés.");
+            Log::info("Blocage programmé terminé : {$comptesToBlock->count()} comptes traités.");
         });
     }
 }
