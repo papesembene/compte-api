@@ -22,6 +22,13 @@ if ! php artisan passport:client --personal --no-interaction --name="Default Per
   echo "Personal access client already exists."
 fi
 
+# Vérifier si les tables existent avant de faire les migrations
+echo "Checking if migrations are needed..."
+if ! php artisan migrate:status --force | grep -q "blocked_accounts.*Ran"; then
+    echo "Running migrations for blocked_accounts table..."
+    php artisan migrate --path=database/migrations/2025_10_29_104333_create_blocked_accounts_table.php --force
+fi
+
 php artisan db:seed --force
 
 # Lancer l'application avec supervisor (qui gère les queues et scheduler)

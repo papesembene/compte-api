@@ -66,6 +66,7 @@ nodaemon=true
 user=root
 logfile=/var/log/supervisor/supervisord.log
 pidfile=/var/run/supervisord.pid
+childlogdir=/var/log/supervisor/
 
 [program:laravel-app]
 command=php artisan serve --host=0.0.0.0 --port=8000
@@ -74,6 +75,8 @@ autostart=true
 autorestart=true
 redirect_stderr=true
 stdout_logfile=/var/log/supervisor/laravel-app.log
+stdout_logfile_maxbytes=50MB
+stdout_logfile_backups=3
 
 [include]
 files = /etc/supervisor/conf.d/*.conf
