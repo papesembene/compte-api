@@ -15,8 +15,8 @@ fi
 # Migrer et seed la DB
 php artisan migrate --force
 
-# Migrer les tables de queue (jobs, failed_jobs, job_batches)
-php artisan migrate --path=database/migrations/ --force
+# Les migrations sont déjà gérées par la commande principale ci-dessus
+
 # Créer le personal access client si manquant
 if ! php artisan passport:client --personal --no-interaction --name="Default Personal Access Client" 2>/dev/null; then
   echo "Personal access client already exists."
