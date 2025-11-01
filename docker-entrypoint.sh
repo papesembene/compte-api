@@ -9,6 +9,9 @@ done
 # Configuration complète de Passport pour environnements éphémères
 echo "Setting up Passport for ephemeral environments..."
 
+# Créer le répertoire storage s'il n'existe pas
+mkdir -p storage
+
 # Générer les clés OAuth
 echo "Generating OAuth keys..."
 php artisan passport:keys --force --no-interaction
@@ -17,13 +20,21 @@ php artisan passport:keys --force --no-interaction
 echo "Installing Passport..."
 php artisan passport:install --force --no-interaction
 
-# S'assurer que les clés sont bien générées et accessibles
+# Vérifier et s'assurer que les clés existent avec les bonnes permissions
 if [ ! -f storage/oauth-private.key ] || [ ! -f storage/oauth-public.key ]; then
   echo "ERROR: OAuth keys not generated properly!"
+  ls -la storage/
   exit 1
 fi
 
-echo "OAuth keys verified successfully"
+# S'assurer que les clés sont lisibles
+chmod 600 storage/oauth-private.key
+chmod 644 storage/oauth-public.key
+chown laravel:laravel storage/oauth-private.key storage/oauth-public.key
+
+echo "OAuth keys generated and verified successfully"
+echo "Private key permissions: $(ls -l storage/oauth-private.key)"
+echo "Public key permissions: $(ls -l storage/oauth-public.key)"
 
 # Migrer la DB
 echo "Running migrations..."
