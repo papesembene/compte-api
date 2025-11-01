@@ -6,9 +6,24 @@ while ! pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USERNAME; do
   sleep 1
 done
 
-# Générer les clés Passport à chaque démarrage (nécessaire pour les environnements éphémères comme Render)
-echo "Generating Passport keys..."
+# Configuration complète de Passport pour environnements éphémères
+echo "Setting up Passport for ephemeral environments..."
+
+# Générer les clés OAuth
+echo "Generating OAuth keys..."
 php artisan passport:keys --force --no-interaction
+
+# Installer Passport (crée les clients et migrations)
+echo "Installing Passport..."
+php artisan passport:install --force --no-interaction
+
+# S'assurer que les clés sont bien générées et accessibles
+if [ ! -f storage/oauth-private.key ] || [ ! -f storage/oauth-public.key ]; then
+  echo "ERROR: OAuth keys not generated properly!"
+  exit 1
+fi
+
+echo "OAuth keys verified successfully"
 
 # Migrer la DB
 echo "Running migrations..."
