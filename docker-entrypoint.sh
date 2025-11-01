@@ -9,20 +9,22 @@ done
 # Générer les clés Passport si elles n'existent pas
 if [ ! -f storage/oauth-private.key ] || [ ! -f storage/oauth-public.key ]; then
   echo "Generating Passport keys..."
-  php artisan passport:keys --force
+  php artisan passport:keys --force --no-interaction
 fi
 
-# Migrer et seed la DB
-php artisan migrate --force
-
-# Les migrations sont déjà gérées par la commande principale ci-dessus
+# Migrer la DB
+echo "Running migrations..."
+php artisan migrate --force --no-interaction
 
 # Créer le personal access client si manquant
+echo "Checking personal access client..."
 if ! php artisan passport:client --personal --no-interaction --name="Default Personal Access Client" 2>/dev/null; then
   echo "Personal access client already exists."
 fi
 
-php artisan db:seed --force
+# Seed la DB
+echo "Seeding database..."
+php artisan db:seed --force --no-interaction
 
 # Lancer l'application avec supervisor (qui gère les queues et scheduler)
 exec gosu laravel "$@"

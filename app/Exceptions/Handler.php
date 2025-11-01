@@ -27,4 +27,19 @@ class Handler extends ExceptionHandler
             //
         });
     }
+  
+    /**
+     * Convert an authentication exception into a response.
+     */
+    protected function unauthenticated($request, \Illuminate\Auth\AuthenticationException $exception)
+    {
+        if ($request->is('api/*')) {
+            return response()->json([
+                'message' => 'Unauthenticated.',
+                'error' => 'Token manquant ou invalide'
+            ], 401);
+        }
+  
+        return redirect()->guest(route('login'));
+    }
 }
