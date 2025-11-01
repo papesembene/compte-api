@@ -23,6 +23,9 @@ RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && chown -R laravel:laravel /var/www/html \
     && chmod -R 775 storage bootstrap/cache
 
+# Volume persistant pour les clés OAuth et autres fichiers storage
+VOLUME ["/var/www/html/storage"]
+
 # Copier script d'entrée
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
