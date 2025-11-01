@@ -25,4 +25,4 @@ fi
 php artisan db:seed --force
 
 # Lancer l'application avec supervisor (qui gère les queues et scheduler)
-exec "$@"
+exec gosu laravel "$@"

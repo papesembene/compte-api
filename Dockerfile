@@ -28,10 +28,11 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Installer cron et supervisor pour gérer les processus en arrière-plan
-RUN apk add --no-cache dcron supervisor
+RUN apk add --no-cache dcron supervisor gosu
 
 # Créer les répertoires nécessaires pour supervisor
-RUN mkdir -p /var/log/supervisor /etc/supervisor/conf.d
+RUN mkdir -p /var/log/supervisor /etc/supervisor/conf.d \
+    && chown -R laravel:laravel /var/log/supervisor
 
 # Configuration supervisor pour les queues et scheduler
 COPY <<EOF /etc/supervisor/conf.d/laravel-worker.conf
@@ -39,6 +40,7 @@ COPY <<EOF /etc/supervisor/conf.d/laravel-worker.conf
 process_name=%(program_name)s_%(process_num)02d
 command=php /var/www/html/artisan queue:work --sleep=3 --tries=3 --max-jobs=1000 --timeout=90
 directory=/var/www/html
+user=laravel
 autostart=true
 autorestart=true
 numprocs=1
@@ -49,6 +51,7 @@ stdout_logfile=/var/log/supervisor/laravel-queue-worker.log
 process_name=%(program_name)s_%(process_num)02d
 command=php /var/www/html/artisan schedule:work
 directory=/var/www/html
+user=laravel
 autostart=true
 autorestart=true
 numprocs=1
@@ -56,14 +59,12 @@ redirect_stderr=true
 stdout_logfile=/var/log/supervisor/laravel-scheduler.log
 EOF
 
-USER laravel
 EXPOSE 8000
 
 # Configuration supervisor principale
 COPY <<EOF /etc/supervisor/supervisord.conf
 [supervisord]
 nodaemon=true
-user=root
 logfile=/var/log/supervisor/supervisord.log
 pidfile=/var/run/supervisord.pid
 childlogdir=/var/log/supervisor/
