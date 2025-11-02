@@ -56,6 +56,31 @@ class ArchiveExpiredBlockedAccountsJob implements ShouldQueue
                 }
 
                 try {
+                    // Vérifier si la table blocked_accounts existe dans Neon
+                    $tableExists = DB::connection('neon')->select("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'blocked_accounts')")[0]->exists ?? false;
+
+                    if (!$tableExists) {
+                        Log::warning("Table blocked_accounts n'existe pas dans Neon. Création de la table...");
+                        DB::connection('neon')->statement("
+                            CREATE TABLE IF NOT EXISTS blocked_accounts (
+                                id UUID PRIMARY KEY,
+                                compte_id UUID,
+                                numero_compte VARCHAR(10),
+                                type_compte VARCHAR(255),
+                                client_id UUID,
+                                date_debut_blocage TIMESTAMP,
+                                date_fin_blocage TIMESTAMP NULL,
+                                motif TEXT,
+                                compte_data JSON,
+                                client_data JSON,
+                                archived_at TIMESTAMP,
+                                created_at TIMESTAMP,
+                                updated_at TIMESTAMP
+                            )
+                        ");
+                        Log::info("Table blocked_accounts créée dans Neon.");
+                    }
+
                     // Archiver le compte dans Neon avant de le bloquer
                     DB::connection('neon')->table('blocked_accounts')->insert([
                         'id' => (string) \Illuminate\Support\Str::uuid(),
@@ -77,6 +102,7 @@ class ArchiveExpiredBlockedAccountsJob implements ShouldQueue
                     Log::info("✅ Compte {$compte->id} ({$compte->numero_compte}) bloqué automatiquement et archivé dans Neon.");
                 } catch (\Exception $e) {
                     Log::error("❌ Erreur lors du blocage du compte {$compte->numero_compte}: " . $e->getMessage());
+                    Log::error("Stack trace: " . $e->getTraceAsString());
                 }
             }
 

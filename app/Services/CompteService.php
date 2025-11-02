@@ -75,22 +75,33 @@ class CompteService
         if ($compte->statut === 'bloque') {
             // Si c'est un compte épargne bloqué, vérifier s'il est archivé dans Neon
             if ($compte->type_compte === 'epargne') {
-                $archivedData = DB::connection('neon')
-                    ->table('blocked_accounts')
-                    ->where('numero_compte', $numero_compte)
-                    ->first();
+                try {
+                    // Vérifier si la table blocked_accounts existe dans Neon
+                    $tableExists = DB::connection('neon')->select("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'blocked_accounts')")[0]->exists ?? false;
 
-                if ($archivedData) {
-                    // Retourner les données archivées
-                    $compteData = json_decode($archivedData->compte_data, true);
-                    $clientData = json_decode($archivedData->client_data, true);
+                    if ($tableExists) {
+                        $archivedData = DB::connection('neon')
+                            ->table('blocked_accounts')
+                            ->where('numero_compte', $numero_compte)
+                            ->first();
 
-                    // Ajouter les dates de blocage
-                    $compteData['date_debut_blocage'] = $archivedData->date_debut_blocage;
-                    $compteData['date_fin_blocage'] = $archivedData->date_fin_blocage;
-                    $compteData['client'] = $clientData;
+                        if ($archivedData) {
+                            // Retourner les données archivées
+                            $compteData = json_decode($archivedData->compte_data, true);
+                            $clientData = json_decode($archivedData->client_data, true);
 
-                    return ['data' => $compteData, 'message' => 'Détails du compte archivé récupérés avec succès.'];
+                            // Ajouter les dates de blocage
+                            $compteData['date_debut_blocage'] = $archivedData->date_debut_blocage;
+                            $compteData['date_fin_blocage'] = $archivedData->date_fin_blocage;
+                            $compteData['client'] = $clientData;
+
+                            return ['data' => $compteData, 'message' => 'Détails du compte archivé récupérés avec succès.'];
+                        }
+                    } else {
+                        \Illuminate\Support\Facades\Log::warning("Table blocked_accounts n'existe pas dans Neon pour le compte {$numero_compte}");
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Erreur lors de l'accès à Neon pour le compte {$numero_compte}: " . $e->getMessage());
                 }
             }
 

@@ -55,12 +55,19 @@ class UnarchiveExpiredBlockedAccountsJob implements ShouldQueue
                 }
 
                 try {
-                    // Supprimer l'archive de Neon
-                    $deleted = DB::connection('neon')->table('blocked_accounts')
-                        ->where('compte_id', $compte->id)
-                        ->delete();
+                    // Vérifier si la table blocked_accounts existe dans Neon
+                    $tableExists = DB::connection('neon')->select("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'blocked_accounts')")[0]->exists ?? false;
 
-                    Log::info("Suppression de l'archive Neon pour le compte {$compte->numero_compte}: {$deleted} enregistrement(s) supprimé(s)");
+                    if (!$tableExists) {
+                        Log::warning("Table blocked_accounts n'existe pas dans Neon pour le déblocage du compte {$compte->numero_compte}. Skipping.");
+                    } else {
+                        // Supprimer l'archive de Neon
+                        $deleted = DB::connection('neon')->table('blocked_accounts')
+                            ->where('compte_id', $compte->id)
+                            ->delete();
+
+                        Log::info("Suppression de l'archive Neon pour le compte {$compte->numero_compte}: {$deleted} enregistrement(s) supprimé(s)");
+                    }
 
                     // Débloquer le compte
                     $compte->update(['statut' => 'debloque']);
@@ -68,6 +75,7 @@ class UnarchiveExpiredBlockedAccountsJob implements ShouldQueue
                     Log::info("✅ Compte {$compte->id} ({$compte->numero_compte}) débloqué automatiquement.");
                 } catch (\Exception $e) {
                     Log::error("❌ Erreur lors du déblocage du compte {$compte->numero_compte}: " . $e->getMessage());
+                    Log::error("Stack trace: " . $e->getTraceAsString());
                 }
             }
 

@@ -40,6 +40,38 @@ echo "Public key permissions: $(ls -l storage/oauth-public.key)"
 echo "Running migrations..."
 php artisan migrate --force --no-interaction
 
+# Créer la table blocked_accounts dans Neon si elle n'existe pas
+echo "Checking and creating blocked_accounts table in Neon..."
+php artisan tinker --execute="
+try {
+    \$tableExists = DB::connection('neon')->select(\"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'blocked_accounts')\")[0]->exists ?? false;
+    if (!\$tableExists) {
+        DB::connection('neon')->statement(\"
+            CREATE TABLE blocked_accounts (
+                id UUID PRIMARY KEY,
+                compte_id UUID,
+                numero_compte VARCHAR(10),
+                type_compte VARCHAR(255),
+                client_id UUID,
+                date_debut_blocage TIMESTAMP,
+                date_fin_blocage TIMESTAMP NULL,
+                motif TEXT,
+                compte_data JSON,
+                client_data JSON,
+                archived_at TIMESTAMP,
+                created_at TIMESTAMP,
+                updated_at TIMESTAMP
+            )
+        \");
+        echo 'Table blocked_accounts created in Neon.';
+    } else {
+        echo 'Table blocked_accounts already exists in Neon.';
+    }
+} catch (Exception \$e) {
+    echo 'Error creating table in Neon: ' . \$e->getMessage();
+}
+"
+
 # Créer le personal access client si manquant
 echo "Checking personal access client..."
 if ! php artisan passport:client --personal --no-interaction --name="Default Personal Access Client" 2>/dev/null; then
