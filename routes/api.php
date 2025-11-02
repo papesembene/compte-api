@@ -66,4 +66,37 @@ Route::middleware(['throttle:api', 'throttle:1000,1,user', 'throttle:100,1,ip'])
         Route::get('transactions/historique/{compte}', [TransactionController::class, 'historique']);
         Route::get('transactions/{transaction}', [TransactionController::class, 'show']);
     });
+// Schedule endpoint for cron jobs
+Route::post('/schedule/run', function (Request $request) {
+    // Security check with cron key
+    if ($request->header('X-Cron-Key') !== config('app.cron_key')) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    \Illuminate\Support\Facades\Artisan::call('schedule:run');
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Scheduled commands executed',
+        'output' => \Illuminate\Support\Facades\Artisan::output(),
+        'timestamp' => now()->toISOString()
+    ]);
+});
+});
+
+// Schedule endpoint for cron jobs
+Route::post('/schedule/run', function (Request $request) {
+// Security check with cron key
+if ($request->header('X-Cron-Key') !== config('app.cron_key')) {
+    return response()->json(['error' => 'Unauthorized'], 401);
+}
+
+\Illuminate\Support\Facades\Artisan::call('schedule:run');
+
+return response()->json([
+    'status' => 'success',
+    'message' => 'Scheduled commands executed',
+    'output' => \Illuminate\Support\Facades\Artisan::output(),
+    'timestamp' => now()->toISOString()
+]);
 });
