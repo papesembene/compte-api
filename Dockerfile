@@ -14,8 +14,14 @@ RUN addgroup -g 1000 laravel && adduser -G laravel -g laravel -s /bin/sh -D lara
 
 WORKDIR /var/www/html
 
+# Copier les dépendances depuis l'étape composer-build
 COPY --from=composer-build /app/vendor ./vendor
+
+# Copier le reste des fichiers de l'application
 COPY . .
+
+# Vérifier que vendor existe et contient des fichiers
+RUN ls -la vendor/ | head -5
 
 RUN mkdir -p storage/framework/{cache,data,sessions,testing,views} \
     && mkdir -p storage/logs \
