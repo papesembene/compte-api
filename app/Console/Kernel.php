@@ -14,14 +14,14 @@ class Kernel extends ConsoleKernel
     {
         // Archiver les transactions vers Neon quotidiennement à minuit
 
-        // Bloquer automatiquement les comptes dont la date de début de blocage est atteinte (toutes les heures en production)
+        // Bloquer automatiquement les comptes dont la date de début de blocage est atteinte (toutes les minutes pour les tests)
         $schedule->job(\App\Jobs\ArchiveExpiredBlockedAccountsJob::class)
-                 ->hourly()
+                 ->everyMinute()
                  ->description('Bloquer automatiquement les comptes à la date programmée');
 
         // Débloquer automatiquement les comptes dont la date de fin de blocage est atteinte (toutes les heures en production)
         $schedule->job(\App\Jobs\UnarchiveExpiredBlockedAccountsJob::class)
-                 ->hourly()
+                 ->everyMinute()
                  ->description('Débloquer automatiquement les comptes expirés');
     }
 
