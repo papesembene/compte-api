@@ -70,11 +70,6 @@ Route::middleware(['throttle:api', 'throttle:1000,1,user', 'throttle:100,1,ip'])
 
 // Cron job endpoints (outside middleware groups for direct access)
 Route::post('schedule/run', function (Request $request) {
-    // Security check with cron key
-    if ($request->header('X-Cron-Key') !== config('app.cron_key')) {
-        return response()->json(['error' => 'Unauthorized'], 401);
-    }
-
     \Illuminate\Support\Facades\Artisan::call('schedule:run');
 
     return response()->json([
@@ -86,11 +81,6 @@ Route::post('schedule/run', function (Request $request) {
 });
 
 Route::post('queue/process', function (Request $request) {
-    // Security check with cron key
-    if ($request->header('X-Cron-Key') !== config('app.cron_key')) {
-        return response()->json(['error' => 'Unauthorized'], 401);
-    }
-
     // Process one job from the queue
     \Illuminate\Support\Facades\Artisan::call('queue:work', [
         '--once' => true,
